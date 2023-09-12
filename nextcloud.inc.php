@@ -126,14 +126,20 @@ function nc_create_share($path, $expiry) {
         'path' => $final_path, 'shareType' => 3, 'Permission' => 1, 'expireDate' => $expiry,
     );
 
-    $output = nc_curl($url, "MOVE", array('OCS-APIRequest' => 'true'), $post_fields);
+    $output = nc_curl($url, false, array('OCS-APIRequest' => 'true'), $post_fields);
 
+    debug_info($output, 'nc_create_share -> output');
+    
     // convert the resulting XML String to XML objects
     $xml = simplexml_load_string($output);
+    
+    debug_info($xml, 'nc_create_share -> xml');
     // convert it to JSON
     $json = json_encode($xml);
     // convert JSON to array
     $array = json_decode($json,TRUE);
+
+    debug_info($json, 'nc_create_share -> json');
 
     return $array['data']['url'];
 }
@@ -215,7 +221,7 @@ function nc_curl_execute(array $options, bool $debug = false) {
     if ($UMS['debug_mode'] == 'on'){
         rewind($streamVerboseHandle);
         $verboseLog = stream_get_contents($streamVerboseHandle);
-        debug_info("<pre>" . htmlspecialchars($verboseLog) . "</pre>", __FUNCTION__);
+        debug_info($verboseLog , __FUNCTION__);
     }
 
     // check for errors
