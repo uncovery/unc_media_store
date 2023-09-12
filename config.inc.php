@@ -81,12 +81,12 @@ $UMS['user_settings'] = array(
         'title' => 'Nextcloud Share Expiry',
         'validator' => array('relative_date_time' => true),
     ),
-    'nextcloud_date_folders' => array(
-        'help' => 'This plugin will sort files into folders. You can choose here if the folders should be daily or monthly.',
-        'default' => 'Y/m',
+    'nextcloud_file_filenames' => array(
+        'help' => 'This plugin uses cURL to process files. cURL cannot use files that contain spaces in their name. Please choose how to deal with that',
+        'default' => '_',
         'type' => 'dropdown',
-        'options' => array('y/m' => 'Monthly folders', 'y/m/d' => 'Daily Folders'),
-        'title' => 'Nextcloud date Folder creation',
+        'options' => array('_' => 'Replace with an underscore "_"', '-' => 'Replace with a minus "-"'),
+        'title' => 'Nextcloud Filename Fix',
     ),
     'media_price' => array(
         'help' => 'The price for one media file to download. Needs to be in CENTS!',
@@ -109,14 +109,14 @@ $UMS['user_settings'] = array(
         'title' => 'Stripe Mode',
     ),
     'stripe_api_secret_key' => array(
-        'help' => 'The secret for the LIVE Stripe account',
-        'default' => 'sk_live....',
+        'help' => 'The secret for the LIVE Stripe account. You can use restricted keys. The permissions need to be WRITE for Proructs, Checkout Sessions, Prices and Payment Links.',
+        'default' => 'rk_live....',
         'type' => 'text',
         'title' => 'Stripe Secret LIVE Key',
     ),
     'stripe_api_test_secret_key' => array(
-        'help' => 'The API secret for the TEST Stripe account',
-        'default' => 'sk_test....',
+        'help' => 'The API secret for the TEST Stripe account. You can use restricted keys. The permissions need to be WRITE for Proructs, Checkout Sessions, Prices and Payment Links.',
+        'default' => 'rk_test....',
         'type' => 'text',
         'title' => 'Stripe Secret TEST Key',
     ),
