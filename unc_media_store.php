@@ -15,8 +15,10 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('WPINC')) {
     die();
 }
-
 global $UMS, $TMP_FOLDERS;
+$UMS['start_time'] = microtime(true);
+
+
 require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
@@ -210,10 +212,50 @@ function user_alert($string) {
     return $out;
 }
 
-function debug_info($info) {
+function debug_info($info, $location, $format = false) {
     global $UMS;
 
-    if ($UMS['debug_mode'] == 'on') {
-        $UMS['debug_values'][] = var_export($info, true);
+    if ($format == 'xml') {
+        $domxml = new \DOMDocument('1.0');
+        $domxml->preserveWhiteSpace = false;
+        $domxml->formatOutput = true;
+        /* @var $xml SimpleXMLElement */
+        $domxml->loadXML($info->asXML());
+        $info = $domxml->save();
     }
+
+    if ($UMS['debug_mode'] == 'on') {
+        $UMS['debug_info'][microtime2string()] = array(
+            'function' => $location,
+            'content' => var_export($info, true),
+        );
+    }
+}
+
+function debug_display() {
+    global $UMS;
+
+    $end_time = microtime(true);
+    $execution_time = $end_time - $UMS['start_time'];
+    $execution_time_formatted = number_format($execution_time, 6, ".", "'") . " sec";
+
+    $out = "<table>
+        <tr><th>Time</th><th>Function</th><th>Value</th>\n";
+    foreach ($UMS['debug_info'] as $time => $I) {
+        $out .= "<tr><td>$time</td><td>{$I['function']}</td><td>{$I['content']}</td></tr>\n";
+    }
+    $out .= "<tr><td>Execution time</td><td>$execution_time_formatted</td></tr>\n";
+    $out .= "</table>\n";
+
+    return $out;
+}
+
+function microtime2string() {
+    $microtime = microtime(true);
+
+    $date_obj = \DateTime::createFromFormat('0.u00 U', microtime());
+    $date_obj->setTimezone(new \DateTimeZone(wp_timezone_string()));
+
+    $time_str = $date_obj->format('Y-m-d H:i:s u') . substr((string)$microtime, 1, 8) . "ms";
+    return $time_str;
 }

@@ -71,7 +71,7 @@ function admin_init() {
             $callback = 'ums\setting_multiple_render';
             $args['options'] = $D['options'];
         }
-        
+
         if (isset($D['validator'])) {
             $check = settings_validation($D['validator'], $setting_value);
             if (!$check) {
@@ -79,7 +79,7 @@ function admin_init() {
                 $args['message'] = 'Invalid Value, Default used!';
             }
         }
-        
+
         add_settings_field (
             $prefix . $setting,
             __($D['title'], 'wordpress'),
@@ -108,7 +108,7 @@ function settings_validation($validator, $setting_value) {
         case 'integer':
             if (intval($setting_value) == 0 ) {
                 return false;
-            }            
+            }
     }
     return true;
 }
@@ -120,7 +120,7 @@ function settings_validation($validator, $setting_value) {
 function admin_settings() {
     global $UMS;
     remove_filter('the_content', 'wpautop');
-       
+
     echo '<div class="wrap unc_gallery unc_gallery_admin">
     <h2>Uncovery Nextcloud Media Store</h2>
     <script type="text/javascript">
@@ -139,19 +139,19 @@ function admin_settings() {
     if ($UMS['debug_mode'] == 'on') {
         $debug_tab = "<li><a href='#tab4'><span>Debug</span></a></li>";
     }
-    
+
     echo "<li><a href='#tab1'><span>Settings</span></a></li>
         <li><a href='#tab2'><span>Files</span></a></li>
         <li><a href='#tab3'><span>Sales</span></a></li>
         $debug_tab
     </ul>\n";
-    
+
     echo "<div class=''>
         <div id='tab1'>
         <form method=\"post\" action=\"options.php\">\n";
-    
+
     $settings_ok = true;
-    
+
     if (stripe_test_login() === false)  {
         $settings_ok = false;
     }
@@ -159,7 +159,7 @@ function admin_settings() {
     if (read_all_files() === false) {
         $settings_ok = false;
     }
-    
+
     settings_fields('ums_settings_page');
     do_settings_sections('ums_settings_page');
     submit_button();
@@ -167,7 +167,7 @@ function admin_settings() {
     if ($settings_ok === false) {
         return;
     }
-    
+
     echo "</form>
         </div>
         <div id='tab2'>\n";
@@ -180,12 +180,12 @@ function admin_settings() {
 
     # Set up tab titles
     if ($UMS['debug_mode'] == 'on') {
-        echo "<div id='tab5'></div>";
+        echo "<div id='tab4'>" . debug_display() . "</div>";
     }
 }
 
 
-function list_files(){ 
+function list_files(){
     $files = read_db();
 
     $out = "<table>";
@@ -197,7 +197,7 @@ function list_files(){
         <th>Size</th>
         <th>Stripe Product</th>
     </tr>\n";
-    
+
     foreach ($files as $F) {
         $thumb_url =  $F->thumbnail_url;
         $stripe_data = stripe_keys();
@@ -206,7 +206,7 @@ function list_files(){
             $url =  $stripe_data['url'] . "products/$F->stripe_product_id";
             $url_html = "<a target=\"_blank\" href=\"$url\">Click here</a>";
         }
-        
+
         $out .= "<tr>
             <td>$F->full_path</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
@@ -216,7 +216,7 @@ function list_files(){
             <td>$url_html</td>
         </tr>\n";
     }
-    
+
     $out .= "</table>";
 
     return $out;
@@ -234,7 +234,7 @@ function list_sales() {
         $out .= "<tr><td>$D->mode</td><td>$D->full_path</td><td>$D->fullname</td><td>$D->email</td><td>$link</td><td>$D->expiry</dh></tr>\n";
     }
 
-    
+
     $out .= "</table>\n";
     return $out;
 }
@@ -243,50 +243,50 @@ function list_sales() {
  * We read the files from nextcloud and process them to add them to the db
  * we also delete old files from the DB that do not exist on nextcloud anymore
  * TODO: also remove them from the strip database
- * 
+ *
  * @global type $wpdb
  */
 function read_all_files() {
     global $wpdb;
-    
+
     // Read all files from the nextcloud server
     $nc_files = nc_curl_read_folder();
-    
+
     $files_filtered = nc_filter_files($nc_files);
- 
-    // we check the time now and add the time to all found entries, 
+
+    // we check the time now and add the time to all found entries,
     // then delete the rest since those must have been removed from nextcloud
-    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d h:i:s');    
-       
+    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d h:i:s');
+
     // read already known files from the DB to compare
     $db_files = read_db();
-    
+
     // let's get all the existing time stamps from the DB that are different from
     // the one created above
     $old_timestamps = array();
     foreach ($db_files as $file) {
         $old_timestamps[$file->verified] = $file->verified;
     }
-    
+
     foreach ($files_filtered as $F) {
         // process this file
         process_single_file($F, $db_files, $time_stamp);
     }
-    
+
     // now we delete all the not updated files from the DB based on the timestamp
     foreach ($old_timestamps as $time_stamp) {
         $wpdb->delete(
             $wpdb->prefix . "ums_files",
             array('verified' => $time_stamp,),  // field to update
             array('%s',), // string format of timestamp
-        );  
+        );
     }
 }
 
 
 /**
  * Process one individual file
- * 
+ *
  * @global type $wpdb
  * @global type $UMS
  * @param type $F
@@ -295,7 +295,7 @@ function read_all_files() {
  */
 function process_single_file($F, $db_files, $time_stamp) {
     global $wpdb, $UMS;
-    
+
     $P = $F->propstat->prop;
 
     // we need to strip '/remote.php/dav/files/username'
@@ -316,7 +316,7 @@ function process_single_file($F, $db_files, $time_stamp) {
         }
     } else { // otherwise, add to DB
         $thumbs_url = plugin_dir_url(__FILE__) . "thumbs/" . md5($file_path) . ".jpg";
-        
+
         $modified_date = strtotime($P->getlastmodified->__toString());
         $file_size = byteConvert($P->getcontentlength->__toString());
         $start_time = str_replace("-", ":", substr($filename, 11, 8));
@@ -332,7 +332,7 @@ function process_single_file($F, $db_files, $time_stamp) {
                     'thumbnail_path' => $file_path . ".jpg",
                     'thumbnail_url' => $thumbs_url,
                     'folder' => $folder,
-                    'start_date' => $start_date, 
+                    'start_date' => $start_date,
                     'start_time' => $start_time,
                     'end_time' => $modified_date,
                     'size' => $file_size,
@@ -348,17 +348,17 @@ function process_single_file($F, $db_files, $time_stamp) {
                 array('full_path' => $file_path),  // where condition
                 array('%s',), // string format of timestamp
                 array('%s',), // string format of where condition
-            );            
+            );
         }
         // download the thumbnail if we do not have it.
         // this assumes that all files have thumbnails
         // fails silently if not
         $thumbnail_file = $UMS['settings']['thumbs_folder'] . "/" . md5($file_path) . ".jpg";
         if (!file_exists($thumbnail_file)) {
-            nc_download_file($file_path . ".jpg", $thumbnail_file);        
+            nc_download_file($file_path . ".jpg", $thumbnail_file);
         }
     }
-} 
+}
 
 /**
  * Generic function to render a text input for WP settings dialogues

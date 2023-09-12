@@ -13,14 +13,13 @@ if (!defined('WPINC')) {
 function nc_curl_read_folder() {
     global $UMS;
 
-    $url = "remote.php/dav/files/"
-        . $UMS['nextcloud_username'] . "/" .  $UMS['nextcloud_folder'];
+    $url = "remote.php/dav/files/{$UMS['nextcloud_username']}/{$UMS['nextcloud_folder']}";
 
-
-    $output = nc_curl($url , "PROPFIND", array('Depth' => $UMS['nextcloud_folder_depth']));
+    $output = nc_curl($url, "PROPFIND", array('Depth' => $UMS['nextcloud_folder_depth']));
     $xml = simplexml_load_string($output);
 
     if ($xml === false) {
+        debug_info($output, __FUNCTION__);
         echo user_alert("No files could be found on nextcloud");
         return;
     }
@@ -193,6 +192,7 @@ function nc_curl(string $url, $request = false, array $headers = [], array $post
 }
 
 function nc_curl_execute(array $options, bool $debug = false) {
+    global $UMS;
     // open the connection
     $ch = curl_init();
 
@@ -201,7 +201,7 @@ function nc_curl_execute(array $options, bool $debug = false) {
         curl_setopt($ch, $k, $v);
     }
 
-    if ($debug){
+    if ($UMS['debug_mode'] == 'on'){
         curl_setopt($ch, CURLOPT_VERBOSE, true);
         $streamVerboseHandle = fopen('php://temp', 'w+');
         curl_setopt($ch, CURLOPT_STDERR, $streamVerboseHandle);
@@ -209,13 +209,13 @@ function nc_curl_execute(array $options, bool $debug = false) {
 
     // execture the cURL
     $output = curl_exec($ch);
+    // close the connection
+    curl_close($ch);
 
-    if ($debug){
+    if ($UMS['debug_mode'] == 'on'){
         rewind($streamVerboseHandle);
         $verboseLog = stream_get_contents($streamVerboseHandle);
-
-        debug_info("cUrl verbose information:\n",
-             "<pre>", htmlspecialchars($verboseLog), "</pre>\n");
+        debug_info("<pre>" . htmlspecialchars($verboseLog) . "</pre>", __FUNCTION__);
     }
 
     // check for errors
@@ -226,6 +226,5 @@ function nc_curl_execute(array $options, bool $debug = false) {
         echo user_alert("There was an error connecting to Nextcloud. The returned error was:<br><pre>$output</pre>");
         return false;
     }
-    // close the connection
-    curl_close($ch);
+    return $output;
 }
