@@ -1,5 +1,6 @@
 <?php
 namespace ums;
+
 /*
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
@@ -225,7 +226,7 @@ function debug_info($info, $location, $format = false) {
     }
 
     if ($UMS['debug_mode'] == 'on') {
-        $UMS['debug_info'][microtime2string()] = array(
+        $UMS['debug_info'][microtime(true)] = array(
             'function' => $location,
             'content' => var_export($info, true),
         );
@@ -241,13 +242,30 @@ function debug_display() {
 
     $out = "<table>
         <tr><th>Time</th><th>Function</th><th>Value</th>\n";
+    $last_time = false;
     foreach ($UMS['debug_info'] as $time => $I) {
-        $out .= "<tr><td>$time</td><td>{$I['function']}</td><td>{$I['content']}</td></tr>\n";
+        $time_str = microtime_diff($time, $last_time);
+        $content = htmlspecialchars($I['content']);
+        $out .= "<tr><td>$time_str</td><td>{$I['function']}</td><td><pre>$content</pre></td></tr>\n";
+        $last_time = $time;
     }
     $out .= "<tr><td>Execution time</td><td>$execution_time_formatted</td></tr>\n";
     $out .= "</table>\n";
 
     return $out;
+}
+
+function microtime_diff($time, $last_time) {
+    global $UMS;
+    
+    if (!$last_time) {
+        $time_val = $time - $UMS['start_time'];
+    } else {
+        $time_val = $time - $last_time;
+    }
+    
+    $time_str = number_format($time_val, 6, ".", "'") . " sec";
+    return $time_str;
 }
 
 function microtime2string() {
