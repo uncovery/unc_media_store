@@ -9,6 +9,8 @@ if (!defined('WPINC')) {
  * @return string
  */
 function show_interface() {
+    global $UMS;
+    
     // check if we had a sale:
     $session_id = filter_input(INPUT_GET, 'session_id');
     if (!is_null($session_id)) {
@@ -68,6 +70,10 @@ function show_interface() {
         $out .= recording_details($one_recording);
     }
 
+    if ($UMS['debug_mode'] == 'on') {
+        $out .= "<div id='tab4'>" . debug_display() . "</div>";
+    }    
+    
     return $out;
 }
 
@@ -106,7 +112,7 @@ function show_sales_result($session_id) {
             Dear $user_name,<br>
             <br>
             You can now donwload the file here: <a href=\"$share_url\">$share_url</a>.<br>
-            This link will be <br>active until $expiry</b>. Please download it as soon as possible.<br>
+            This link will be <b>active until $expiry</b>. Please download it as soon as possible.<br>
             <br>
             Thanks a lot for your contribution to live music!<br>
             <br>
@@ -118,6 +124,10 @@ function show_sales_result($session_id) {
         $out = "There was an issue with the transaction. Please contact us if you have trouble.";
     }
 
+    if ($UMS['debug_mode'] == 'on') {
+        $out .= "<div id='tab4'>" . debug_display() . "</div>";
+    }       
+    
     return $out;
 }
 
