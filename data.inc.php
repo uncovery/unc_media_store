@@ -19,7 +19,7 @@ function data_db_create() {
         folder varchar(256) NOT NULL,
         start_date date DEFAULT '0000-00-00' NOT NULL,
         start_time time DEFAULT '00:00:00' NOT NULL,
-        end_time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        end_time time DEFAULT '00:00:00' NOT NULL,
         size varchar(64) NOT NULL,
         description varchar(256) DEFAULT '' NOT NULL,
         stripe_product_id varchar(256) DEFAULT '' NOT NULL,
@@ -30,7 +30,7 @@ function data_db_create() {
         UNIQUE KEY `start_date` (`start_date`,`full_path`)
     ) $charset_collate;";
     dbDelta($sql_file);
-    
+
     $table_name_sales = $wpdb->prefix . "ums_sales";
     $sql_sales = "CREATE TABLE $table_name_sales (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -45,8 +45,8 @@ function data_db_create() {
         UNIQUE KEY `id` (`id`)
     ) $charset_collate;";
     dbDelta($sql_sales);
-    
-    add_option( "ums_media_store_db_version", "1.8" );
+
+    add_option( "ums_media_store_db_version", "2" );
 }
 
 function data_db_remove() {
@@ -57,7 +57,7 @@ function data_db_remove() {
     );
     foreach ($tables as $table) {
         $table_str = $wpdb->prefix . $table;
-        $wpdb->query($wpdb->prepare("DROP TABLE $table_str;"));            
+        $wpdb->query($wpdb->prepare("DROP TABLE $table_str;"));
     }
 }
 
@@ -65,29 +65,29 @@ function read_db() {
     global $wpdb;
     $file_array = array();
     $table = $wpdb->prefix . "ums_files";
-    $sql = "SELECT * FROM $table ORDER BY start_date";    
+    $sql = "SELECT * FROM $table ORDER BY start_date";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
         $file_array[$D->full_path] = $D;
-    } 
+    }
     return $file_array;
 }
 
 function data_fetch_dates($ums_db) {
     $dates = array();
- 
+
     foreach ($ums_db as $D) {
         $dates[$D->start_date] = $D->start_date;
     }
-    
+
     return $dates;
 }
 
 function data_fetch_date_recordings($date) {
     global $wpdb;
-    
+
     $recordings = array();
-    
+
     $table = $wpdb->prefix . "ums_files";
     $sql = "SELECT * FROM $table WHERE start_date = '$date' ORDER BY start_time";
     $file_data = $wpdb->get_results($sql);
@@ -99,7 +99,7 @@ function data_fetch_date_recordings($date) {
 
 function data_fetch_one_recording(int $id) {
     global $wpdb;
-    
+
     $table = $wpdb->prefix . "ums_files";
     $sql = "SELECT * FROM $table WHERE id = '$id'";
     $file_data = $wpdb->get_results($sql);
@@ -109,7 +109,7 @@ function data_fetch_one_recording(int $id) {
 
 function data_prime_sales_session($file_id, $session_id, $product_id, $price_id) {
     global $wpdb, $UMS;
-    
+
     $wpdb->insert(
     $wpdb->prefix . "ums_sales",
         array(
@@ -118,7 +118,7 @@ function data_prime_sales_session($file_id, $session_id, $product_id, $price_id)
             'mode' => $UMS['stripe_mode'],
         )
     );
-    
+
     $wpdb->update(
     $wpdb->prefix . "ums_files",
         array(
@@ -127,20 +127,20 @@ function data_prime_sales_session($file_id, $session_id, $product_id, $price_id)
         ),
         array(
             'id' => $file_id,
-        ),   
+        ),
 	array(
             '%s',
             '%s',
-	),        
+	),
 	array(
             '%s',
-	),                 
-    );    
+	),
+    );
 }
 
 function data_finalize_sales_session($session_id, $username, $email, $nc_link, $expiry) {
     global $wpdb;
-    
+
     $wpdb->update(
     $wpdb->prefix . "ums_sales",
         array(
@@ -160,13 +160,13 @@ function data_finalize_sales_session($session_id, $username, $email, $nc_link, $
 	),
 	array(
             '%s',
-	),             
+	),
     );
 }
 
 function data_get_file_from_session($session_id) {
     global $wpdb;
-    
+
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
     $D = $wpdb->get_results($wpdb->prepare(
@@ -175,24 +175,24 @@ function data_get_file_from_session($session_id) {
         WHERE $sales_table.stripe_session_id='%s';",
         $session_id
     ));
-    
+
     if (count($D) < 0) {
         echo "ERROR finding session!";
         return false;
-    } 
-    
+    }
+
     return $D[0]->full_path;
 }
 
 function data_get_sales() {
     global $wpdb;
-    
+
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
     $D = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id;",
     ));
-        
+
     return $D;
 }

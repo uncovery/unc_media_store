@@ -1,0 +1,7 @@
+table.ums_admin_table, 
+table.ums_admin_table th, 
+table.ums_admin_table td {
+  padding: 3px;
+  border: 1px solid black;
+  border-collapse: collapse;
+}

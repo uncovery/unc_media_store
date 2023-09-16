@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     1.0
+Version:     1.5
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2
@@ -57,6 +57,7 @@ function register_shortcodes(){
 function enqueue_jquery() {
     // Load the datepicker script (pre-registered in WordPress).
     wp_enqueue_script('ums_datepicker_js', plugin_dir_url( __FILE__ ) . 'datepicker.js');
+    wp_enqueue_style('unc_gallery_css', plugin_dir_url( __FILE__ ) . 'ums_styles.css');
     wp_enqueue_script('jquery-ui');
     wp_enqueue_style('jquery-ui');
     wp_enqueue_script('jquery-form');
@@ -111,7 +112,33 @@ function plugin_deactivate() {
     foreach ($UMS['user_settings'] as $setting => $D) {
         unregister_setting('ums_settings_page', $prefix . $setting);
     }
+
 }
+
+// cron scheduling
+function file_scan_cron_activate() {
+    global $UMS;
+    if (! wp_next_scheduled ('ums_hourly_filescan')) {
+    	wp_schedule_event(time(), 'hourly', 'ums_hourly_filescan');
+    }
+}
+register_activation_hook( __FILE__, 'ums\file_scan_cron_activate' );
+
+function file_scan_cron_deactivate() {
+    global $UMS;
+    wp_clear_scheduled_hook( 'ums_hourly_filescan' );
+}
+register_deactivation_hook( __FILE__, 'ums\file_scan_cron_deactivate' );
+
+
+function hourly_run() {
+    global $UMS;
+    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
+    add_option($UMS['settings_prefix'] . "hourly_cron_lastrun", $time_stamp);
+    read_all_files();
+}
+add_action( 'ums_hourly_filescan', 'ums\hourly_run', 10, 2 );
+
 
 /**
  * Uninstalling the plugin
@@ -192,17 +219,6 @@ function byteConvert($bytes) {
     return round($bytes_fix/pow(1024, $e), 2) . " " . $s[$e];
 }
 
-// create a dated folder
-function date_folder($start_date) {
-    $unix_time = strtotime($start_date);
-    if (!$unix_time) {
-        return false;
-    }
-    $folder = date("Y/m", $unix_time);
-
-    return $folder;
-}
-
 /**
  * display an alert to the user
  * @param type $string
@@ -226,7 +242,8 @@ function debug_info($info, $location, $format = false) {
     }
 
     if ($UMS['debug_mode'] == 'on') {
-        $UMS['debug_info'][microtime(true)] = array(
+        $UMS['debug_info'][] = array(
+            'time' => microtime(true),
             'function' => $location,
             'content' => var_export($info, true),
         );
@@ -240,14 +257,14 @@ function debug_display() {
     $execution_time = $end_time - $UMS['start_time'];
     $execution_time_formatted = number_format($execution_time, 6, ".", "'") . " sec";
 
-    $out = "<table>
+    $out = "<table class='ums_admin_table'>
         <tr><th>Time</th><th>Function</th><th>Value</th>\n";
     $last_time = false;
-    foreach ($UMS['debug_info'] as $time => $I) {
-        $time_str = microtime_diff($time, $last_time);
+    foreach ($UMS['debug_info'] as $I) {
+        $time_str = microtime_diff($I['time'], $last_time);
         $content = htmlspecialchars($I['content']);
         $out .= "<tr><td>$time_str</td><td>{$I['function']}</td><td><pre>$content</pre></td></tr>\n";
-        $last_time = $time;
+        $last_time = $I['time'];
     }
     $out .= "<tr><td>Execution time</td><td>$execution_time_formatted</td></tr>\n";
     $out .= "</table>\n";
@@ -257,13 +274,13 @@ function debug_display() {
 
 function microtime_diff($time, $last_time) {
     global $UMS;
-    
+
     if (!$last_time) {
         $time_val = $time - $UMS['start_time'];
     } else {
         $time_val = $time - $last_time;
     }
-    
+
     $time_str = number_format($time_val, 6, ".", "'") . " sec";
     return $time_str;
 }

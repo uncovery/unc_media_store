@@ -13,12 +13,15 @@ environment such as woocommerce
 - You need a system that allows you to just know what files are there and let people
 browse them and buy them via an interface online.
 
+## ideal case preparation:
+- You make sure that your filenames do not contain spaces (e.g. OBS studio advanced setttings)
+- You run a script through a cronjob that sorts the files into directories based on their date
+- You run a script through a cronjob that creates thumbnails for your videos
+
 ## solution approach:
 - There is a machine that regularly records videos via OBS. OBS is configured to 
 store the files in a folder inside of a nextcloud share automatically.
-- There is a script running on the same machine that creates thumbnails of the videos via cronjob
-- This plugin connects to the nextcloud server and moves the files into date-based folder for better filing
-- It creates a user interface that can be shown to via the shortcode \[ums_show_interface\]
+- This plugin creates a user interface that can be shown to via the shortcode \[ums_show_interface\]
 - the interface allows users to browse through the files by date
 - only when a user clicks on the buy-button, the system creates a product on the stripe server and forwards
 the user to a page on the stripe server to purchase the file
@@ -37,12 +40,12 @@ to manually maintain a list.
 ## caveats
 this system is right now assuming that
 - you have a thumbnail generated for each file
-- the filenames are the default OBS file format.
+- the filenames are the default OBS file format, but without spaces (%CCYY-%MM-%DD_%hh-%mm-%ss)
 - at this point, the list of files is only generated when the admin interface is opened
 
 ## installation
 - install the plugin
-- configure the nextcloud & stripe login info
+- configure the nextcloud login & stripe secret keys. You can use restricted keys. The permissions need to be WRITE for Proructs, Checkout Sessions, Prices and Payment Links.
 - create a new page in wordpress and insert the \[ums_show_interface\] shortcode
 
 ## future plans

@@ -10,7 +10,10 @@ if (!defined('WPINC')) {
  */
 function show_interface() {
     global $UMS;
-    
+
+    debug_info($_POST, 'show_interface POST');
+    debug_info($_GET, 'show_interface GET');
+
     // check if we had a sale:
     $session_id = filter_input(INPUT_GET, 'session_id');
     if (!is_null($session_id)) {
@@ -39,7 +42,6 @@ function show_interface() {
 
     // if there is no date selected, let's just send the date picker back
     if (!$selected_date) {
-        $out .="</form>";
         return $out;
     }
 
@@ -49,13 +51,12 @@ function show_interface() {
         return $out;
     }
 
-    $out .= "<h2>Date: $selected_date</h2>\n";
     $date_recordings = data_fetch_date_recordings($last_date);
     // if there are several recordings, show the dropdown
     $recordings_count = count($date_recordings);
     if ($recordings_count > 1) {
-        $out .= "There are $recordings_count recording on $selected_date. Please choose:<br>";
-        $out .= recording_list($date_recordings, $selected_file_id);
+        $out .= "There are $recordings_count recording on $selected_date. Please choose:";
+        $out .= recording_list($last_date, $date_recordings, $selected_file_id);
 
     // if there is only one, show that one directly.
     } else if (count($date_recordings) == 1) {
@@ -72,62 +73,8 @@ function show_interface() {
 
     if ($UMS['debug_mode'] == 'on') {
         $out .= "<div id='tab4'>" . debug_display() . "</div>";
-    }    
-    
-    return $out;
-}
-
-/**
- * once a sales transaction is completed on stripe, we get all the session data
- * from stripe, create the share on the nextcloud server and send everything to
- * the customer
- *
- * @global \ums\type $UMS
- * @param type $session_id
- * @return string
- */
-function show_sales_result($session_id) {
-    global $UMS;
-    // get the sesson data
-
-    $session_object = stripe_get_session_data($session_id);
-
-    $user_email = $session_object->customer_details->email;
-    $user_name = $session_object->customer_details->name ;
-    $payment_status = $session_object->payment_status; // paid
-    $status = $session_object->status; // complete
-
-    if ($payment_status == 'paid' && $status == 'complete') {
-        $file_path = data_get_file_from_session($session_id);
-
-        $date_obj = date_create($UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
-        $expiry = date_format($date_obj, 'Y-m-d');
-
-        $share_url = nc_create_share($file_path, $expiry);
-
-        data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
-
-        $out = "
-            <h3> Congratulations! </h3>
-            Dear $user_name,<br>
-            <br>
-            You can now donwload the file here: <a href=\"$share_url\">$share_url</a>.<br>
-            This link will be <b>active until $expiry</b>. Please download it as soon as possible.<br>
-            <br>
-            Thanks a lot for your contribution to live music!<br>
-            <br>
-            The Wanch<br>
-        ";
-
-        wp_mail($user_email, "Your Media Purchase", $out);
-    } else {
-        $out = "There was an issue with the transaction. Please contact us if you have trouble.";
     }
 
-    if ($UMS['debug_mode'] == 'on') {
-        $out .= "<div id='tab4'>" . debug_display() . "</div>";
-    }       
-    
     return $out;
 }
 
@@ -152,7 +99,7 @@ function recording_date_picker($last_date, $data) {
     $out .= "<form method=\"POST\" id=\"ums_datepicker_form\">
         <div id=\"ums_datepicker_wrap\">Please select the date your gig was recorded:
         <input id=\"$data_field\" name=\"ums_date\" type=\"text\" value=\"$last_date\" size=\"10\">
-            </div>";
+            </div></form>\n";
     return $out;
 }
 
@@ -160,15 +107,17 @@ function recording_date_picker($last_date, $data) {
  * Display the available recordings for a specific date
  *
  * @param type $selected_date_data
- * @param type $selected_filename
+ * @param type $selected_file_id
  * @return string
  */
-function recording_list($selected_date_data, $selected_file_id = null) {
+function recording_list($date, $selected_date_data, $selected_file_id = null) {
 
     if (is_null($selected_file_id)) {
         $selected_nothing = 'selected';
     }
-    $out = "<select id=\"recording\" name=\"file_id\" onchange=\"this.form.submit()\">\n
+    $out = "<form method=\"POST\" id=\"ums_timeslot_form\">
+        <input name=\"ums_date\" type=\"hidden\" value=\"$date\">
+        <select id=\"recording\" name=\"file_id\" onchange=\"this.form.submit()\">\n
         <option disabled $selected_nothing value>Please select the timeslot of the recording</option>\n";
 
     foreach ($selected_date_data as $filedata) {
@@ -177,7 +126,9 @@ function recording_list($selected_date_data, $selected_file_id = null) {
         } else {
             $selected = '';
         }
-        $out .= "<option $selected value=\"$filedata->id\">$filedata->start_date $filedata->start_time - $filedata->end_time}</option>\n";
+        $short_start_time = substr($filedata->start_time, 0, 5);
+        $short_end_time = substr($filedata->end_time, 0, 5);
+        $out .= "<option $selected value=\"$filedata->id\">$short_start_time until $short_end_time</option>\n";
     }
     $out .= "</select>\n</form>\n";
     return $out;
@@ -193,15 +144,17 @@ function recording_list($selected_date_data, $selected_file_id = null) {
  * @return string
  */
 function recording_details($D) {
+    $short_start_time = substr($D->start_time, 0, 5);
+    $short_end_time = substr($D->end_time, 0, 5);
 
     $out = "
         <form method=\"POST\" id=\"ums_buy_form\" rel=\"nofollow\">
             <img src=\"$D->thumbnail_url\"><br>
             <b>File name:</b> $D->file_name<br>
-            <b>Recording time:</b> $D->start_time - $D->end_time<br>
+            <b>Recording time:</b> $short_start_time until $short_end_time<br>
             <b>File Size:</b> $D->size<br>
             <b>Price: </b> 500.- HKD<br>
-            You will receive a download link via email after payment.<br>
+            You will receive a download link via email after payment. The link will be active for 1 month.<br>
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
             <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">
             <input name=\"buynow\" type=\"submit\" value=\"Buy now (500 HKD)\">
@@ -254,4 +207,59 @@ function execute_purchase() {
         // now send the user to the payment page
         wp_redirect($session->url);
     }
+}
+
+
+/**
+ * once a sales transaction is completed on stripe, we get all the session data
+ * from stripe, create the share on the nextcloud server and send everything to
+ * the customer
+ *
+ * @global \ums\type $UMS
+ * @param type $session_id
+ * @return string
+ */
+function show_sales_result($session_id) {
+    global $UMS;
+    // get the sesson data
+
+    $session_object = stripe_get_session_data($session_id);
+
+    $user_email = $session_object->customer_details->email;
+    $user_name = $session_object->customer_details->name ;
+    $payment_status = $session_object->payment_status; // paid
+    $status = $session_object->status; // complete
+
+    if ($payment_status == 'paid' && $status == 'complete') {
+        $file_path = data_get_file_from_session($session_id);
+
+        $date_obj = date_create($UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
+        $expiry = date_format($date_obj, 'Y-m-d');
+
+        $share_url = nc_create_share($file_path, $expiry);
+
+        data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
+
+        $out = "
+            <h3> Congratulations! </h3>
+            Dear $user_name,<br>
+            <br>
+            You can now donwload the file here: <a href=\"$share_url\">$share_url</a>.<br>
+            This link will be <b>active until $expiry</b>. Please download it as soon as possible.<br>
+            <br>
+            Thanks a lot for your contribution to live music!<br>
+            <br>
+            The Wanch<br>
+        ";
+
+        wp_mail($user_email, "Your Media Purchase", $out);
+    } else {
+        $out = "There was an issue with the transaction. Please contact us if you have trouble.";
+    }
+
+    if ($UMS['debug_mode'] == 'on') {
+        $out .= "<div id='tab4'>" . debug_display() . "</div>";
+    }
+
+    return $out;
 }

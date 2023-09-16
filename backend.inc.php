@@ -172,6 +172,11 @@ function admin_settings() {
         </div>
         <div id='tab2'>\n";
 
+    $schedule_last_run = get_option($UMS['settings_prefix'] . "hourly_cron_lastrun");
+    if ($schedule_last_run) {
+        echo "Automatic hourly file scan ran last: $schedule_last_run<br><hr>";
+    }
+
     echo list_files();
     echo "</div>
         <div id='tab3'>\n";
@@ -188,7 +193,7 @@ function admin_settings() {
 function list_files(){
     $files = read_db();
 
-    $out = "<table>";
+    $out = "<table class='ums_admin_table'>";
     $out .= "<tr>
         <th>Full Path</th>
         <th>Thumbnail</th>
@@ -225,7 +230,7 @@ function list_files(){
 
 function list_sales() {
     $out = "<h2> List of Sales </h2>
-        <table>
+        <table class='ums_admin_table'>
         <tr><th>Mode</th><th>File</th><th>Customer Name</th><th>Customer email</th><th>Share link</th><th>Expiry</th></tr>
     ";
     $data = data_get_sales();
@@ -256,7 +261,7 @@ function read_all_files() {
 
     // we check the time now and add the time to all found entries,
     // then delete the rest since those must have been removed from nextcloud
-    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d h:i:s');
+    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
 
     // read already known files from the DB to compare
     $db_files = read_db();
@@ -298,65 +303,69 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     $P = $F->propstat->prop;
 
-    // we need to strip '/remote.php/dav/files/username'
-    $root_url = '/remote.php/dav/files/' . $UMS['nextcloud_username'] . "/" . $UMS['nextcloud_folder'];
-    $strip_length = strlen($root_url);
+    // let's check for spaces in the filename
+    if (strstr($F->href->__toString(), ' ')) {
+        return false;
+    }
+
+    $server_path = '/remote.php/dav/files/' . $UMS['nextcloud_username'];
+
+    // we need to strip '/remote.php/dav/files/username/nextcloud_folder' for the database
+    $full_url = $server_path. "/" . $UMS['nextcloud_folder'];
+    $strip_length = strlen($full_url);
     $file_path = substr($F->href->__toString(), $strip_length);
 
     // get more variables from XML
     $filename = basename($file_path);
+
+    // 2023-09-13_21-18_22-28.mp4
+
     $start_date = substr($filename, 0, 10);
     $folder = dirname($file_path);
 
     // check if we need to move the file
-    if ($folder == "/" . $UMS['nextcloud_folder']) {
-        $target_folder = date_folder($start_date);
-        if ($target_folder) {
-            nc_move_file($filename, $target_folder);
-        }
-    } else { // otherwise, add to DB
-        $thumbs_url = plugin_dir_url(__FILE__) . "thumbs/" . md5($file_path) . ".jpg";
+    $thumbs_url = plugin_dir_url(__FILE__) . "thumbs/" . md5($file_path) . ".jpg";
 
-        $modified_date = strtotime($P->getlastmodified->__toString());
-        $file_size = byteConvert($P->getcontentlength->__toString());
-        $start_time = str_replace("-", ":", substr($filename, 11, 8));
-        // we add new files
-        if (!isset($db_files[$file_path])) {
-            echo "$file_path is new!<br>";
-            $description = "Recording from $start_date $start_time until $modified_date";
-            $wpdb->insert(
-                $wpdb->prefix . "ums_files",
-                array(
-                    'file_name' => $filename,
-                    'full_path' => $file_path,
-                    'thumbnail_path' => $file_path . ".jpg",
-                    'thumbnail_url' => $thumbs_url,
-                    'folder' => $folder,
-                    'start_date' => $start_date,
-                    'start_time' => $start_time,
-                    'end_time' => $modified_date,
-                    'size' => $file_size,
-                    'verified' => $time_stamp,
-                    'description' => $description,
-                )
-            );
-        } else {
-            // we still need to update the timestamp to mark the DB Entry as existing
-            $wpdb->update(
-                $wpdb->prefix . "ums_files",
-                array('verified' => $time_stamp,),  // field to update
-                array('full_path' => $file_path),  // where condition
-                array('%s',), // string format of timestamp
-                array('%s',), // string format of where condition
-            );
-        }
-        // download the thumbnail if we do not have it.
-        // this assumes that all files have thumbnails
-        // fails silently if not
-        $thumbnail_file = $UMS['settings']['thumbs_folder'] . "/" . md5($file_path) . ".jpg";
-        if (!file_exists($thumbnail_file)) {
-            nc_download_file($file_path . ".jpg", $thumbnail_file);
-        }
+
+    $end_time = str_replace("-", ":", substr($filename, 17, 5)) . ":00";
+    $file_size = byteConvert($P->getcontentlength->__toString());
+
+    $start_time = str_replace("-", ":", substr($filename, 11, 8));
+    // we add new files
+    if (!isset($db_files[$file_path])) {
+        $description = "Recording from $start_date $start_time until $modified_date";
+        $wpdb->insert(
+            $wpdb->prefix . "ums_files",
+            array(
+                'file_name' => $filename,
+                'full_path' => $file_path,
+                'thumbnail_path' => $file_path . ".jpg",
+                'thumbnail_url' => $thumbs_url,
+                'folder' => $folder,
+                'start_date' => $start_date,
+                'start_time' => $start_time,
+                'end_time' => $end_time,
+                'size' => $file_size,
+                'verified' => $time_stamp,
+                'description' => $description,
+            ),
+        );
+    } else {
+        // we still need to update the timestamp to mark the DB Entry as existing
+        $wpdb->update(
+            $wpdb->prefix . "ums_files",
+            array('verified' => $time_stamp,),  // field to update
+            array('full_path' => $file_path),  // where condition
+            array('%s',), // string format of timestamp
+            array('%s',), // string format of where condition
+        );
+    }
+    // download the thumbnail if we do not have it.
+    // this assumes that all files have thumbnails
+    // fails silently if not
+    $thumbnail_file = $UMS['settings']['thumbs_folder'] . "/" . md5($file_path) . ".jpg";
+    if (!file_exists($thumbnail_file)) {
+        nc_download_file($file_path . ".jpg", $thumbnail_file);
     }
 }
 

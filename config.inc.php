@@ -31,7 +31,7 @@ $UMS['settings'] = array(
 // This is used to automatically / dynamically create the settings menu
 $UMS['user_settings'] = array(
     'debug_mode' => array(
-        'help' => 'Select if you want to see debug output.',
+        'help' => 'Select if you want to see debug output. In the backend, there will be a new tab here. For the user page, debug info will be displayed at the end of the page. This includes usernames and passwords. Be careful not to expose your info.',
         'default' => 'off',
         'type' => 'dropdown',
         'options' => array('off' => 'Off', 'on' => 'On'),
@@ -80,13 +80,6 @@ $UMS['user_settings'] = array(
         'type' => 'text',
         'title' => 'Nextcloud Share Expiry',
         'validator' => array('relative_date_time' => true),
-    ),
-    'nextcloud_file_filenames' => array(
-        'help' => 'This plugin uses cURL to process files. cURL cannot use files that contain spaces in their name. Please choose how to deal with that',
-        'default' => '_',
-        'type' => 'dropdown',
-        'options' => array('_' => 'Replace with an underscore "_"', '-' => 'Replace with a minus "-"'),
-        'title' => 'Nextcloud Filename Fix',
     ),
     'media_price' => array(
         'help' => 'The price for one media file to download. Needs to be in CENTS!',
