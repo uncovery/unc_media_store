@@ -191,7 +191,9 @@ function data_get_sales() {
     $sales_table =  $wpdb->prefix . "ums_sales";
     $D = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM $sales_table
-        LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id;",
+        LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
+        ORDER BY sales_time DESC
+        ;",
     ));
 
     return $D;
