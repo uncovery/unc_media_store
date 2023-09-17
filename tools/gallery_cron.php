@@ -3,6 +3,7 @@
 global $root;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
+date_default_timezone_set($timezone);
 
 read_files();
 
@@ -22,7 +23,7 @@ function read_files() {
         $folder = dirname($file_path);
 
         // check the file date so that we delete old files
-        $age = file_age($start_date);
+        $age = delete_old_files($start_date);
         if ($age->m > 2) {
             unlink($file_path);
             continue;
@@ -37,13 +38,15 @@ function read_files() {
 
         // check if we need to move the file
         if ($folder == $root) {
-            $edit_date = get_file_modify_time($file_path);
-            $date_only = substr($filename, 0, 16);
-            $target_filename = str_replace(" ", "_", $date_only) . "_" . $edit_date . ".mp4";
+            $duration = get_video_length($file_path);
+            $start_time = substr($filename, 0, 16);
+            $end_time = calculate_end_time($start_time, $duration);
+
+            $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
 
             $target_folder = $root . "/" . date_folder($start_date);
 
-            if (file_exists($target_folder)) {
+            if (!file_exists($target_folder)) {
                 mkdir($target_folder, 0777, true);
             }
 
@@ -57,7 +60,7 @@ function read_files() {
     }
 }
 
-function file_age($file_date) {
+function delete_old_files($file_date) {
     // let's determine the current month
     global $timezone;
     $date_obj_now = new DateTime();
@@ -69,13 +72,32 @@ function file_age($file_date) {
     return $interval;
 }
 
-function get_file_modify_time($file_path) {
+function get_video_length($file_path)  {
+    $command = 'ffmpeg -i ' . $file_path . ' 2>&1 | grep "Duration"';
+    $return = shell_exec($command);
+
+    //  Duration: 01:09:22.11, start: 0.000000, bitrate: 5648 kb/s
+    $hours = substr($return, 12, 2);
+    $minutes = substr($return, 15,2);
+
+    $final = array(
+        'hours' => intval($hours),
+        'minutes' => intval($minutes),
+    );
+
+    return $final;
+}
+
+function calculate_end_time($start_time, $duration) {
     global $timezone;
-    $date_obj = new DateTime();
-    $date_obj->setTimestamp(filemtime($file_path));
-    $date_obj->setTimezone(new DateTimeZone($timezone));
-    $edit_date = date_format($date_obj, "H-i");
-    return $edit_date;
+    $hours = $duration['hours'];
+    $minutes = $duration['minutes'];
+
+    $date = date_create_from_format('Y-m-d_H-i', $start_time, new DateTimeZone($timezone));
+
+    $end_time = date('H-i',strtotime("+$hours hour +$minutes minutes", $date));
+
+    return $end_time;
 }
 
 function create_gallery($filename, $folder) {
@@ -96,8 +118,6 @@ function create_gallery($filename, $folder) {
         } else {
             echo "OK!\n";
         }
-    } else {
-        echo "gallery already exists at $gallery_path\n";
     }
 }
 
@@ -116,3 +136,4 @@ function date_folder($start_date) {
 
     return $folder;
 }
+
