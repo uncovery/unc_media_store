@@ -329,6 +329,11 @@ function process_single_file($F, $db_files, $time_stamp) {
     $start_date = substr($filename, 0, 10);
     $folder = dirname($file_path);
 
+    // let's not process files in the root directory
+    if ($folder == '/') {
+        return;
+    }
+
     // check if we need to move the file
     $thumbs_url = plugin_dir_url(__FILE__) . "thumbs/" . md5($file_path) . ".jpg";
 
