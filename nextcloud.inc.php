@@ -94,6 +94,10 @@ function nc_download_file($path, $target = false) {
     $url = "remote.php/dav/files/{$UMS['nextcloud_username']}/{$UMS['nextcloud_folder']}$path";
     $output = nc_curl($url);
 
+    if (strlen($output) == 0) {
+        return false;
+    }
+
     if ($target) {
         $fp = fopen($target, "w");
         if ($fp) {
@@ -101,6 +105,7 @@ function nc_download_file($path, $target = false) {
             fclose($fp);
         } else {
             echo "Error creating file $target during thumbnail download!<br>";
+            return false;
         }
     } else {
         return $output;
@@ -129,10 +134,10 @@ function nc_create_share($path, $expiry) {
     $output = nc_curl($url, false, array('OCS-APIRequest' => 'true'), $post_fields);
 
     debug_info($output, 'nc_create_share -> output');
-    
+
     // convert the resulting XML String to XML objects
     $xml = simplexml_load_string($output);
-    
+
     debug_info($xml, 'nc_create_share -> xml');
     // convert it to JSON
     $json = json_encode($xml);
