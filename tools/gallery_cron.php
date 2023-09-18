@@ -1,14 +1,18 @@
 <?php
 
-global $root;
+global $root, $debug, $timezone;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
 
 read_files();
 
+$debug = true;
+
 function read_files() {
     global $root, $timezone;
+
+    debug_info( '-------------START -------------');
 
     $di = new RecursiveDirectoryIterator($root);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
@@ -16,7 +20,7 @@ function read_files() {
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
-
+        debug_info( "FOUND FILE: $file_path ");
         $filename = basename($file_path);
         $start_date = substr($filename, 0, 10);
         // OBS file names start with the date
@@ -25,6 +29,8 @@ function read_files() {
         // check the file date so that we delete old files
         $age = delete_old_files($start_date);
         if ($age->m > 2) {
+
+            debug_info( "File is old, deleting it! ");
             unlink($file_path);
             continue;
         }
@@ -32,12 +38,14 @@ function read_files() {
         // echo "filesize : " . filesize($file_path) . "\n";
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
+            debug_info( "File is too big, deleting it! ");
             unlink($file_path);
             continue;
         }
 
         // check if we need to move the file
         if ($folder == $root) {
+            debug_info( "File is in root, moving it!");
             $duration = get_video_length($file_path);
             $start_time = substr($filename, 0, 16);
             $end_time = calculate_end_time($start_time, $duration);
@@ -55,9 +63,12 @@ function read_files() {
 
         // do not operate on files in the root directory
         if ($file->getPath() !== $root) {
+            debug_info( "File not in root, making gallery! ");
             create_gallery($file->getBasename(), $file->getPath());
         }
     }
+
+    debug_info( '-------------END -------------');
 }
 
 function delete_old_files($file_date) {
@@ -137,3 +148,10 @@ function date_folder($start_date) {
     return $folder;
 }
 
+function debug_info($text) {
+    global $debug;
+
+    if ($debug) {
+        echo "$text\n";
+    }
+}

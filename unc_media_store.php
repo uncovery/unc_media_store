@@ -56,8 +56,8 @@ function register_shortcodes(){
 // we load the jquery datepicker UI
 function enqueue_jquery() {
     // Load the datepicker script (pre-registered in WordPress).
-    wp_enqueue_script('ums_datepicker_js', plugin_dir_url( __FILE__ ) . 'datepicker.js');
-    wp_enqueue_style('unc_gallery_css', plugin_dir_url( __FILE__ ) . 'ums_styles.css');
+    wp_enqueue_script('ums_datepicker_js', plugin_dir_url( __FILE__ ) . '/js/datepicker.js');
+    wp_enqueue_style('unc_gallery_css', plugin_dir_url( __FILE__ ) . '/css/ums_styles.css');
     wp_enqueue_script('jquery-ui');
     wp_enqueue_style('jquery-ui');
     wp_enqueue_script('jquery-form');
