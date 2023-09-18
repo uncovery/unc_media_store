@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     1.6
+Version:     1.7
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2
@@ -118,26 +118,26 @@ function plugin_deactivate() {
 // cron scheduling
 function file_scan_cron_activate() {
     global $UMS;
-    if (! wp_next_scheduled ('ums_hourly_filescan')) {
+    if (!wp_next_scheduled ('ums_hourly_filescan')) {
     	wp_schedule_event(time(), 'hourly', 'ums_hourly_filescan');
+        add_option($UMS['settings_prefix'] . "hourly_cron_lastrun", 'never');
     }
 }
-register_activation_hook( __FILE__, 'ums\file_scan_cron_activate' );
+register_activation_hook( __FILE__, 'ums\file_scan_cron_activate');
 
 function file_scan_cron_deactivate() {
-    global $UMS;
     wp_clear_scheduled_hook( 'ums_hourly_filescan' );
 }
-register_deactivation_hook( __FILE__, 'ums\file_scan_cron_deactivate' );
+register_deactivation_hook( __FILE__, 'ums\file_scan_cron_deactivate');
 
 
 function hourly_run() {
     global $UMS;
     $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
-    add_option($UMS['settings_prefix'] . "hourly_cron_lastrun", $time_stamp);
+    update_option($UMS['settings_prefix'] . "hourly_cron_lastrun", $time_stamp);
     read_all_files();
 }
-add_action( 'ums_hourly_filescan', 'ums\hourly_run', 10, 2 );
+add_action('ums_hourly_filescan', 'ums\hourly_run', 10, 2);
 
 
 /**
