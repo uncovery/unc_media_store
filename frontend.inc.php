@@ -26,9 +26,9 @@ function show_interface() {
 
     // get form subission
     // step 1: Select a date
-    $selected_date = filter_input(INPUT_POST, 'ums_date', FILTER_SANITIZE_STRING);
+    $selected_date = filter_input(INPUT_GET, 'ums_date', FILTER_SANITIZE_STRING);
     // step 2: select recording on that date
-    $selected_file_id = filter_input(INPUT_POST, 'file_id', FILTER_SANITIZE_NUMBER_INT);
+    $selected_file_id = filter_input(INPUT_GET, 'file_id', FILTER_SANITIZE_NUMBER_INT);
 
     // validate selected date
     if (validate_date($selected_date, $format = 'Y-m-d') && isset($all_dates[$selected_date])) {
@@ -96,7 +96,7 @@ function recording_date_picker($last_date, $data) {
     });
     var ajaxurl = \"" . home_url($wp->request) . "\";
     </script>";
-    $out .= "<form method=\"POST\" id=\"ums_datepicker_form\">
+    $out .= "<form method=\"GET\" id=\"ums_datepicker_form\">
         <div id=\"ums_datepicker_wrap\">Please select the date your gig was recorded:
         <input id=\"$data_field\" name=\"ums_date\" type=\"text\" value=\"$last_date\" size=\"10\">
             </div></form>\n";
@@ -115,7 +115,7 @@ function recording_list($date, $selected_date_data, $selected_file_id = null) {
     if (is_null($selected_file_id)) {
         $selected_nothing = 'selected';
     }
-    $out = "<form method=\"POST\" id=\"ums_timeslot_form\">
+    $out = "<form method=\"GET\" id=\"ums_timeslot_form\">
         <input name=\"ums_date\" type=\"hidden\" value=\"$date\">
         <select id=\"recording\" name=\"file_id\" onchange=\"this.form.submit()\">\n
         <option disabled $selected_nothing value>Please select the timeslot of the recording</option>\n";
