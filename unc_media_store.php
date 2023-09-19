@@ -265,6 +265,9 @@ function debug_display() {
         $out .= "<tr><td>$time_str</td><td>{$I['function']}</td><td><pre>$content</pre></td></tr>\n";
         $last_time = $I['time'];
     }
+
+    $out .= "<tr><td>_POST</td><td></td><td>". var_export($_POST, true) ."</td></tr>\n";
+    $out .= "<tr><td>_GET</td><td></td><td>". var_export($_GET, true) ."</td></tr>\n";
     $out .= "<tr><td>Execution time</td><td>$execution_time_formatted</td></tr>\n";
     $out .= "</table>\n";
 
