@@ -1,8 +1,9 @@
 <?php
 
-global $root, $debug, $timezone;
+global $root, $debug, $timezone, $date_format;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
+$date_format = 'Y-m-d_H-i'; // date format in source filename
 date_default_timezone_set($timezone);
 $debug = true;
 
@@ -49,8 +50,12 @@ function read_files() {
             $start_time = substr($filename, 0, 16);
             $end_time = calculate_end_time($start_time, $duration);
 
-            $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
+            if (!$end_time) {
+                echo "ERROR: Wrong source file date format";
+                continue;
+            }
 
+            $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
             $target_folder = $root . "/" . date_folder($start_date);
 
             if (!file_exists($target_folder)) {
@@ -99,11 +104,16 @@ function get_video_length($file_path)  {
 }
 
 function calculate_end_time($start_time, $duration) {
-    global $timezone;
+    global $timezone, $date_format;
     $hours = $duration['hours'];
     $minutes = $duration['minutes'];
 
-    $date = date_create_from_format('Y-m-d_H-i', $start_time, new DateTimeZone($timezone));
+    $date = date_create_from_format($date_format, $start_time, new DateTimeZone($timezone));
+
+    // wrong date format in file
+    if (!$date) {
+        return false;
+    }
 
     $timestamp = date_format($date, "U");
 
