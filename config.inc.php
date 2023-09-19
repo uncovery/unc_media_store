@@ -68,10 +68,11 @@ $UMS['user_settings'] = array(
         'title' => 'Nextcloud Folder Depth',
         'validator' => array('integer' => true),
     ),
-    'nextcloud_content_type' => array(
-        'help' => 'Which content type do you want to look for on nextcloud? Set to "FALSE" to list all files. See <a href=https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types">this manual</a>',
-        'default' => 'video/mp4',
-        'type' => 'text',
+    'nextcloud_content_types' => array(
+        'help' => 'Which content types do you want to look for on nextcloud?',
+        'default' => array('video/mp4'),
+        'options' => array('video/mp4' => 'video/mp4'), // , 'image/jpeg' => 'image/jpeg'
+        'type' => 'multiple',
         'title' => 'Nextcloud Content Type',
     ),
     'nextcloud_share_time' => array(
