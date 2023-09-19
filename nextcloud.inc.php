@@ -5,7 +5,7 @@ if (!defined('WPINC')) {
 }
 
 /**
- * read a nextcloud folder recurseively to a given depth and return all the contents
+ * read a nextcloud folder recursively to a given depth and return all the contents
  *
  * @global \ums\type $UMS
  * @return type
