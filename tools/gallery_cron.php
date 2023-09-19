@@ -4,10 +4,9 @@ global $root, $debug, $timezone;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
+$debug = true;
 
 read_files();
-
-$debug = true;
 
 function read_files() {
     global $root, $timezone;
@@ -57,13 +56,13 @@ function read_files() {
             if (!file_exists($target_folder)) {
                 mkdir($target_folder, 0777, true);
             }
-
+            debug_info("Moving file to $target_filename");
             rename($file_path, $target_folder . "/" . $target_filename);
         }
 
         // do not operate on files in the root directory
-        if ($file->getPath() !== $root) {
-            debug_info( "File not in root, making gallery! ");
+        if ($file->getPath() !== $root && !file_exists("$file_path.jpg")) {
+            debug_info( "File not in root, gallery does not exist, making gallery! ");
             create_gallery($file->getBasename(), $file->getPath());
         }
     }
@@ -106,7 +105,13 @@ function calculate_end_time($start_time, $duration) {
 
     $date = date_create_from_format('Y-m-d_H-i', $start_time, new DateTimeZone($timezone));
 
-    $end_time = date('H-i',strtotime("+$hours hour +$minutes minutes", $date));
+    $timestamp = date_format($date, "U");
+
+    $end_time_raw = strtotime("+$hours hour +$minutes minute", $timestamp);
+
+    $end_time = date('H-i', $end_time_raw);
+
+    debug_info("adding $hours h and $minutes m to $start_time: result is $end_time");
 
     return $end_time;
 }
