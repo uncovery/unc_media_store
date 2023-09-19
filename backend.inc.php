@@ -17,7 +17,7 @@ function admin_menu() {
     if (isset($UMS['settings_location']) && $UMS['settings_location'] == 'submenu') {
         $main_options_page_hook_suffix = add_options_page(
             'Media Store Options',
-            'MEdia store',
+            'Media store',
             'manage_options',
             'ums\admin_menu',
             'ums\admin_settings'
