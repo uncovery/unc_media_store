@@ -306,12 +306,14 @@ function read_all_files() {
     // now we delete all the not updated files from the DB based on the timestamp
     $deleted = 0;
     foreach ($old_timestamps as $time_stamp) {
-        $wpdb->delete(
+        $deleted_files = $wpdb->delete(
             $wpdb->prefix . "ums_files",
-            array('verified' => $time_stamp,),  // field to update
+            array('verified' => $time_stamp),  // field to update
             array('%s',), // string format of timestamp
         );
-        $deleted++;
+        if ($deleted_files) {
+            $deleted += $deleted_files;
+        }
     }
 
     $result = "
