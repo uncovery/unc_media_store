@@ -16,9 +16,8 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('WPINC')) {
     die();
 }
-global $UMS, $TMP_FOLDERS;
+global $UMS;
 $UMS['start_time'] = microtime(true);
-
 
 require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
