@@ -27,6 +27,8 @@ function nc_curl_read_folder() {
     $ns = $xml->getNamespaces(true);
     $files = $xml->children($ns['d']);
 
+    debug_info("found files:" . count($files) , 'nc_curl_read_folder');
+
     return $files;
 }
 
@@ -47,10 +49,13 @@ function nc_filter_files($files) {
             continue;
         }
         // if we have a content type, use it
-        if ((strtolower(trim($UMS['nextcloud_content_type'])) == 'false') || ($P->getcontenttype->__toString() == $UMS['nextcloud_content_type'])) {
+        if (isset($UMS['nextcloud_content_types'][$P->getcontenttype->__toString()])) {
             $files_copy[] = $F;
         }
     }
+
+    debug_info("files left after filtering: " . count($files_copy), 'nc_filter_files');
+
     return $files_copy;
 }
 
@@ -77,6 +82,8 @@ function nc_move_file($file, $target_folder) {
 
     $url_dest = $UMS['nextcloud_url'] . "remote.php/dav/files/"
         . $UMS['nextcloud_username'] . "/" .  $UMS['nextcloud_folder'] . "/$target_folder/$fixed_file";
+
+    debug_info("moving file on NC instance to $target_folder", 'nc_move_file');
 
     nc_curl($url_file, "MOVE", array('Destination' => $url_dest));
 }
