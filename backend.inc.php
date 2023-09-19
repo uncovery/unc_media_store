@@ -150,13 +150,14 @@ function admin_settings() {
         <div id='tab1'>
         <form method=\"post\" action=\"options.php\">\n";
 
+    // if nexctcloud or stripe do not work, let the user know.
     $settings_ok = true;
-
     if (stripe_test_login() === false)  {
         $settings_ok = false;
     }
 
-    if (read_all_files() === false) {
+
+    if (nc_curl_read_folder() === false) {
         $settings_ok = false;
     }
 
@@ -174,8 +175,19 @@ function admin_settings() {
 
     $schedule_last_run = get_option($UMS['settings_prefix'] . "hourly_cron_lastrun");
     if ($schedule_last_run) {
-        echo "Automatic hourly file scan ran last: $schedule_last_run<br><hr>";
+        echo "Automatic hourly file scan ran last: $schedule_last_run<br>";
     }
+
+    // show a form button to update the files instead of doing it manually
+    echo "<form style=\"margin:5px;\" method=\"POST\"><div><input name=\"update_files\" type=\"submit\" value=\"Update Files now\"></div></form>\n";
+
+    $read_files = filter_input(INPUT_POST, 'update_files', FILTER_SANITIZE_STRING);
+    if ($read_files) {
+        echo "reading files...<br>";
+        echo read_all_files();
+    }
+
+    echo "<hr>\n";
 
     echo list_files();
     echo "</div>
@@ -260,6 +272,8 @@ function list_sales() {
 function read_all_files() {
     global $wpdb;
 
+    debug_info("reading all files", 'read_all_files');
+
     // Read all files from the nextcloud server
     $nc_files = nc_curl_read_folder();
 
@@ -279,19 +293,33 @@ function read_all_files() {
         $old_timestamps[$file->verified] = $file->verified;
     }
 
+    $new_file = 0;
     foreach ($files_filtered as $F) {
+
         // process this file
-        process_single_file($F, $db_files, $time_stamp);
+        $check = process_single_file($F, $db_files, $time_stamp);
+        if ($check == 'new') {
+            $new_file++;
+        }
     }
 
     // now we delete all the not updated files from the DB based on the timestamp
+    $deleted = 0;
     foreach ($old_timestamps as $time_stamp) {
         $wpdb->delete(
             $wpdb->prefix . "ums_files",
             array('verified' => $time_stamp,),  // field to update
             array('%s',), // string format of timestamp
         );
+        $deleted++;
     }
+
+    $result = "
+    Files added to DB: $new_file<br>
+    Files removed from DB: $deleted<br>
+    ";
+
+    return $result;
 }
 
 
@@ -307,6 +335,8 @@ function read_all_files() {
 function process_single_file($F, $db_files, $time_stamp) {
     global $wpdb, $UMS;
 
+    $result = false;
+
     $P = $F->propstat->prop;
 
     // let's check for spaces in the filename
@@ -321,6 +351,8 @@ function process_single_file($F, $db_files, $time_stamp) {
     $strip_length = strlen($full_url);
     $file_path = substr($F->href->__toString(), $strip_length);
 
+    debug_info("file found: $file_path", 'process_single_file');
+
     // get more variables from XML
     $filename = basename($file_path);
 
@@ -331,7 +363,7 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     // let's not process files in the root directory
     if ($folder == '/') {
-        return;
+        return false;
     }
 
     // check if we need to move the file
@@ -344,7 +376,7 @@ function process_single_file($F, $db_files, $time_stamp) {
     $start_time = str_replace("-", ":", substr($filename, 11, 8));
     // we add new files
     if (!isset($db_files[$file_path])) {
-        $description = "Recording from $start_date $start_time until $modified_date";
+        $description = "Recording from $start_date $start_time until $end_time";
         $wpdb->insert(
             $wpdb->prefix . "ums_files",
             array(
@@ -361,6 +393,7 @@ function process_single_file($F, $db_files, $time_stamp) {
                 'description' => $description,
             ),
         );
+        $result = "new";
     } else {
         // we still need to update the timestamp to mark the DB Entry as existing
         $wpdb->update(
@@ -370,8 +403,10 @@ function process_single_file($F, $db_files, $time_stamp) {
             array('%s',), // string format of timestamp
             array('%s',), // string format of where condition
         );
+        $result = 'updated';
     }
     download_thumbnail($file_path);
+    return $result;
 }
 
 function download_thumbnail($file_path) {
