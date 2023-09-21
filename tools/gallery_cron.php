@@ -1,17 +1,20 @@
 <?php
 
-global $root, $debug, $timezone;
+global $root, $debug, $timezone, $video_date_format, $video_date_sample_string;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
-date_default_timezone_set($timezone);
 $debug = true;
+// Define the filename format here
+// the length of the sample string needs to match the date format below
+$video_date_sample_string = '2023-09-20 18-01';
+$video_date_format = 'Y-m-d H-i';
 
+date_default_timezone_set($timezone);
 read_files();
 
 
 function read_files() {
-    global $root, $timezone;
-
+    global $root, $video_date_sample_string;
 
     $di = new RecursiveDirectoryIterator($root);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
@@ -27,7 +30,7 @@ function read_files() {
         $folder = dirname($file_path);
 
         // check the file date so that we delete old files
-        $age = delete_old_files($start_date);
+        $age = calculate_date_age($start_date);
         if ($age->m > 2) {
 
             debug_info( "File is old, deleting it! ");
@@ -51,7 +54,8 @@ function read_files() {
                 continue;
             }
 
-            $start_time = substr($filename, 0, 16);
+            // 2023-09-20 18-01
+            $start_time = substr($filename, 0, strlen($video_date_sample_string));
 
             debug_info("Start time: $start_time");
 
@@ -81,7 +85,14 @@ function read_files() {
     }
 }
 
-function delete_old_files($file_date) {
+/**
+ * calculate the age of a date
+ *
+ * @global string $timezone
+ * @param type $file_date
+ * @return type
+ */
+function calculate_date_age(string $file_date) {
     // let's determine the current month
     global $timezone;
     $date_obj_now = new DateTime();
@@ -93,7 +104,13 @@ function delete_old_files($file_date) {
     return $interval;
 }
 
-function get_video_length($file_path)  {
+/**
+ * use FFMPEG to calculate a video length
+ *
+ * @param string $file_path
+ * @return bool
+ */
+function get_video_length(string $file_path)  {
     $command = 'ffmpeg -i "' . $file_path . '" 2>&1 | grep "Duration"';
     $return = shell_exec($command);
 
@@ -116,12 +133,21 @@ function get_video_length($file_path)  {
     return $final;
 }
 
-function calculate_end_time($start_time, $duration) {
-    global $timezone;
+/**
+ * calculate the end time of a video based on the duration result of get_video_length()
+ *
+ * @global string $timezone
+ * @global string $video_date_format
+ * @param string $start_time
+ * @param array $duration
+ * @return type
+ */
+function calculate_end_time(string $start_time, array $duration) {
+    global $timezone, $video_date_format;
     $hours = $duration['hours'];
     $minutes = $duration['minutes'];
 
-    $date = date_create_from_format('Y-m-d H-i', $start_time, new DateTimeZone($timezone));
+    $date = date_create_from_format($video_date_format, $start_time, new DateTimeZone($timezone));
 
     $timestamp = date_format($date, "U");
 
@@ -134,13 +160,19 @@ function calculate_end_time($start_time, $duration) {
     return $end_time;
 }
 
-function create_gallery($video_path) {
+/**
+ * create a video gallery with VCS
+ * The filename will simply have a '.jpg' added to the original file
+ * https://www.baeldung.com/linux/generate-video-thumbnails-gallery
+ * https://p.outlyer.net/vcs#links
+ * @param string $video_path
+ */
+function create_gallery(string $video_path) {
     $gallery_path = "$video_path.jpg";
 
     if (!file_exists($gallery_path)) {
         debug_info("creating gallery for $gallery_path");
-        // https://www.baeldung.com/linux/generate-video-thumbnails-gallery
-        // https://p.outlyer.net/vcs#links
+
         $command = "vcs '$video_path' -U0 -n 4 -c 2 -H 200 -o $gallery_path";
         shell_exec($command);
 
@@ -152,8 +184,13 @@ function create_gallery($video_path) {
     }
 }
 
-// create a dated folder
-function date_folder($start_date) {
+/**
+ * get a string date and create a year/month folder out of it
+ *
+ * @param string $start_date
+ * @return bool
+ */
+function date_folder(string $start_date) {
     $unix_time = strtotime($start_date);
     if (!$unix_time) {
         return false;
@@ -163,10 +200,15 @@ function date_folder($start_date) {
     return $folder;
 }
 
-function debug_info($text) {
+/**
+ * support function to output debug info to the command line
+ * @global bool $debug
+ * @param string $text
+ */
+function debug_info(string $text) {
     global $debug;
 
     if ($debug) {
-        echo "$text\n";
+        echo "DBG: $text\n";
     }
 }
