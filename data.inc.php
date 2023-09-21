@@ -57,7 +57,7 @@ function data_db_remove() {
     );
     foreach ($tables as $table) {
         $table_str = $wpdb->prefix . $table;
-        $wpdb->query($wpdb->prepare("DROP TABLE $table_str;"));
+        $wpdb->query("DROP TABLE $table_str;");
     }
 }
 
