@@ -24,6 +24,10 @@ function show_interface() {
     $files_data = read_db();
     $all_dates = data_fetch_dates($files_data);
 
+    if (count($all_dates) == 0) {
+        return "Sorry, there are no files for purchase at this moment. Please check back later.";
+    }
+
     // get form subission
     // step 1: Select a date
     $selected_date = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
@@ -151,7 +155,8 @@ function recording_details($D) {
             <b>Recording time:</b> $short_start_time until $short_end_time<br>
             <b>File Size:</b> $D->size<br>
             <b>Price: </b> 500.- HKD<br>
-            You will receive a download link via email after payment. The link will be active for 1 month.<br>
+            You will receive a download link via email after payment.
+            The link will be active for 1 month.<br>
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
             <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">
             <input name=\"buynow\" type=\"submit\" value=\"Buy now (500 HKD)\">
@@ -173,7 +178,8 @@ function recording_details($D) {
  */
 function execute_purchase() {
     $purchase_file_id = filter_input(INPUT_POST, 'launch_sales_id', FILTER_SANITIZE_NUMBER_INT);
-    // this is a honey-pot field to deter bots. IT's hidden via JS, but if there is content, we know the user is fake.
+    // this is a honey-pot field to deter bots. IT's hidden via JS,
+    // but if there is content, we know the user is fake.
     $special_field = filter_input(INPUT_POST, 'special_field');
 
     $check_honeypot = (is_null($special_field) || $special_field == '');
