@@ -185,7 +185,7 @@ function admin_settings() {
         </div>
     </form>\n";
 
-    $read_files = filter_input(INPUT_POST, 'update_files', FILTER_SANITIZE_STRING);
+    $read_files = filter_input(INPUT_POST, 'update_files', FILTER_SANITIZE_ADD_SLASHES);
     if ($read_files) {
         echo "reading files...<br>";
         echo read_all_files();
