@@ -116,6 +116,7 @@ function recording_date_picker(string $last_date, array $data) {
  */
 function recording_list(string $date, array $selected_date_data, $selected_file_id = null) {
 
+    $selected_nothing = '';
     if (is_null($selected_file_id)) {
         $selected_nothing = 'selected';
     }
