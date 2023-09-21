@@ -114,4 +114,17 @@ $UMS['user_settings'] = array(
         'type' => 'text',
         'title' => 'Stripe Secret TEST Key',
     ),
+    'success_text_email' => array(
+        'help' => 'Please enter the text users see when after they bought a file. Available variables: {{username}}, {{link}} {{expiry}}',
+        'default' => 'Dear {{username}},
+
+You can now donwload the file here: {{link}}.
+This link will be active until {{expiry}}. Please download it as soon as possible.
+Thanks a lot!
+
+Website Admin',
+        'type' => 'longtext',
+        'title' => 'Purchase Text',
+    ),
+
 );

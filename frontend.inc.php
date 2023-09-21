@@ -116,7 +116,7 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
         $selected_nothing = 'selected';
     }
     $out = "<form method=\"GET\" id=\"ums_timeslot_form\">
-        <input name=\"ums_date\" type=\"hidden\" value=\"$date\">
+        <input name=\"date\" type=\"hidden\" value=\"$date\">
         <select id=\"recording\" name=\"id\" onchange=\"this.form.submit()\">\n
         <option disabled $selected_nothing value>Please select the timeslot of the recording</option>\n";
 
@@ -237,17 +237,15 @@ function show_sales_result($session_id) {
 
         data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
 
-        $out = "
-            <h3> Congratulations! </h3>
-            Dear $user_name,<br>
-            <br>
-            You can now donwload the file here: <a href=\"$share_url\">$share_url</a>.<br>
-            This link will be <b>active until $expiry</b>. Please download it as soon as possible.<br>
-            <br>
-            Thanks a lot for your contribution to live music!<br>
-            <br>
-            The Wanch<br>
-        ";
+        $config_text= nl2br($UMS['success_text_email']);
+
+        // replace the variables:
+
+        $searches = array( '{{username}}', '{{link}}', '{{expiry}}');
+        $html_url = "<a href=\"$share_url\">$share_url</a>";
+        $replacements = array( $user_name, $html_url, $expiry);
+
+        $out = str_replace($searches, $replacements, $config_text);
 
         wp_mail($user_email, "Your Media Purchase", $out);
     } else {
