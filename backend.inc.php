@@ -5,7 +5,7 @@ if (!defined('WPINC')) {
 }
 
 /**
- * create the admin menu optionally in the admin bar or the settings benu
+ * create the admin menu optionally in the admin bar or the settings
  *
  * @global type $UMS
  */
@@ -35,7 +35,7 @@ function admin_menu() {
 }
 
 /**
- * This adds the Wordpress features for the admin pages
+ * This adds the WordPress features for the admin pages
  *
  * @global type $UNC_GALLERY
  */
@@ -175,11 +175,15 @@ function admin_settings() {
 
     $schedule_last_run = get_option($UMS['settings_prefix'] . "hourly_cron_lastrun");
     if ($schedule_last_run) {
-        echo "Automatic hourly file scan ran last: $schedule_last_run<br>";
+        echo "Automatic hourly file scan ran last: $schedule_last_run<br>\n";
     }
 
     // show a form button to update the files instead of doing it manually
-    echo "<form style=\"margin:5px;\" method=\"POST\"><div><input name=\"update_files\" type=\"submit\" value=\"Update Files now\"></div></form>\n";
+    echo "<form style=\"margin:5px;\" method=\"POST\">
+        <div>
+            <input name=\"update_files\" type=\"submit\" value=\"Update Files now\">
+        </div>
+    </form>\n";
 
     $read_files = filter_input(INPUT_POST, 'update_files', FILTER_SANITIZE_STRING);
     if ($read_files) {
@@ -193,11 +197,11 @@ function admin_settings() {
     echo "</div>
         <div id='tab3'>\n";
     echo list_sales();
-    echo "</div>";
+    echo "</div>\n";
 
     # Set up tab titles
     if ($UMS['debug_mode'] == 'on') {
-        echo "<div id='tab4'>" . debug_display() . "</div>";
+        echo "<div id='tab4'>" . debug_display() . "</div>\n";
     }
 }
 
@@ -234,7 +238,7 @@ function list_files(){
         </tr>\n";
     }
 
-    $out .= "</table>";
+    $out .= "</table>\n";
 
     return $out;
 }
@@ -254,7 +258,7 @@ function list_sales() {
             <th>Share link</th>
             <th>Expiry</th>
         </tr>\n";
-    
+
     $data = data_get_sales();
     foreach ($data as $D) {
         $link = "No sales concluded";
