@@ -8,18 +8,19 @@ $debug = true;
 // the length of the sample string needs to match the date format below
 $video_date_sample_string = '2023-09-20 18-01';
 $video_date_format = 'Y-m-d H-i';
+$valid_file_extensions = array('mp4');
 
 date_default_timezone_set($timezone);
 read_files();
 
 
 function read_files() {
-    global $root, $video_date_sample_string;
+    global $root, $video_date_sample_string, $valid_file_extensions;
 
     $di = new RecursiveDirectoryIterator($root);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
-        // exclude invalid
-        if ($file->isDir() || $file->getExtension() <> 'mp4') {
+        // exclude invalid file extensions and directories
+        if ($file->isDir() || in_array($file->getExtension(), $valid_file_extensions)) {
             continue;
         }
         debug_info( '------------- START FILE -------------');
