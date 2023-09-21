@@ -1,18 +1,17 @@
 <?php
 
-global $root, $debug, $timezone, $date_format;
+global $root, $debug, $timezone;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
-$date_format = 'Y-m-d_H-i'; // date format in source filename
 date_default_timezone_set($timezone);
 $debug = true;
 
 read_files();
 
+
 function read_files() {
     global $root, $timezone;
 
-    debug_info( '-------------START -------------');
 
     $di = new RecursiveDirectoryIterator($root);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
@@ -20,6 +19,7 @@ function read_files() {
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
+        debug_info( '------------- START FILE -------------');
         debug_info( "FOUND FILE: $file_path ");
         $filename = basename($file_path);
         $start_date = substr($filename, 0, 10);
@@ -31,7 +31,7 @@ function read_files() {
         if ($age->m > 2) {
 
             debug_info( "File is old, deleting it! ");
-            unlink($file_path);
+            // unlink($file_path);
             continue;
         }
 
@@ -39,7 +39,7 @@ function read_files() {
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
             debug_info( "File is too big, deleting it! ");
-            unlink($file_path);
+            // unlink($file_path);
             continue;
         }
 
@@ -47,32 +47,38 @@ function read_files() {
         if ($folder == $root) {
             debug_info( "File is in root, moving it!");
             $duration = get_video_length($file_path);
-            $start_time = substr($filename, 0, 16);
-            $end_time = calculate_end_time($start_time, $duration);
-
-            if (!$end_time) {
-                echo "ERROR: Wrong source file date format";
+            if (!$duration) {
                 continue;
             }
 
+            $start_time = substr($filename, 0, 16);
+
+            debug_info("Start time: $start_time");
+
+            $end_time = calculate_end_time($start_time, $duration);
+
+            debug_info("End time: $end_time");
+
             $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
+
+            debug_info("target filename: $target_filename");
+
             $target_folder = $root . "/" . date_folder($start_date);
 
             if (!file_exists($target_folder)) {
                 mkdir($target_folder, 0777, true);
             }
-            debug_info("Moving file to $target_filename");
-            rename($file_path, $target_folder . "/" . $target_filename);
-        }
 
-        // do not operate on files in the root directory
-        if ($file->getPath() !== $root && !file_exists("$file_path.jpg")) {
-            debug_info( "File not in root, gallery does not exist, making gallery! ");
-            create_gallery($file->getBasename(), $file->getPath());
+            $target_path = "$target_folder/$target_filename";
+
+            debug_info("Moving $file_path to $target_path");
+            $rename_check = rename($file_path, $target_path);
+            create_gallery($target_path);
+            return;
+        } else {
+            debug_info("File is not root, skipping moving file... ");
         }
     }
-
-    debug_info( '-------------END -------------');
 }
 
 function delete_old_files($file_date) {
@@ -88,8 +94,15 @@ function delete_old_files($file_date) {
 }
 
 function get_video_length($file_path)  {
-    $command = 'ffmpeg -i ' . $file_path . ' 2>&1 | grep "Duration"';
+    $command = 'ffmpeg -i "' . $file_path . '" 2>&1 | grep "Duration"';
     $return = shell_exec($command);
+
+    if (is_null($return)) {
+        echo "ERROR: Could not determine video length!";
+        return false;
+    }
+
+    debug_info("Video length check result:" . var_export($return, true));
 
     //  Duration: 01:09:22.11, start: 0.000000, bitrate: 5648 kb/s
     $hours = substr($return, 12, 2);
@@ -104,16 +117,11 @@ function get_video_length($file_path)  {
 }
 
 function calculate_end_time($start_time, $duration) {
-    global $timezone, $date_format;
+    global $timezone;
     $hours = $duration['hours'];
     $minutes = $duration['minutes'];
 
-    $date = date_create_from_format($date_format, $start_time, new DateTimeZone($timezone));
-
-    // wrong date format in file
-    if (!$date) {
-        return false;
-    }
+    $date = date_create_from_format('Y-m-d H-i', $start_time, new DateTimeZone($timezone));
 
     $timestamp = date_format($date, "U");
 
@@ -126,30 +134,22 @@ function calculate_end_time($start_time, $duration) {
     return $end_time;
 }
 
-function create_gallery($filename, $folder) {
-    $filename_fixed = str_replace(" ", "_", $filename);
-    $gallery_path = "$folder/$filename_fixed" . ".jpg";
+function create_gallery($video_path) {
+    $gallery_path = "$video_path.jpg";
 
     if (!file_exists($gallery_path)) {
-        echo "creating gallery for $gallery_path: ";
+        debug_info("creating gallery for $gallery_path");
         // https://www.baeldung.com/linux/generate-video-thumbnails-gallery
         // https://p.outlyer.net/vcs#links
-        $command = "vcs '$folder/$filename' -U0 -n 4 -c 2 -H 200 -o $gallery_path";
+        $command = "vcs '$video_path' -U0 -n 4 -c 2 -H 200 -o $gallery_path";
         shell_exec($command);
 
         // delete empty galleries and return
         if (filesize($gallery_path) == 0) {
             unlink($gallery_path);
-            echo "NOT OK, filesoze is null\n";
-        } else {
-            echo "OK!\n";
+            echo "ERROR CREATING GALLERY: $gallery_path filesize is null\n";
         }
     }
-}
-
-function curl_fix_path($path) {
-    $url_file = str_replace(" ", '%20', trim($path));
-    return $url_file;
 }
 
 // create a dated folder
