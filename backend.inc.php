@@ -242,11 +242,19 @@ function list_files(){
 
 function list_sales() {
     $out = "<h2> List of Sales </h2>
-        Please note that only entries with filled in user details are concluded sales.
+        Please note that only entries with filled-in user details are concluded sales.
         Bots can accidentally do the first step in the sales process and this will create an entry here.
         <table class='ums_admin_table'>
-        <tr><th>Date</th><th>Mode</th><th>File</th><th>Customer Name</th><th>Customer email</th><th>Share link</th><th>Expiry</th></tr>
-    ";
+        <tr>
+            <th>Date</th>
+            <th>Mode</th>
+            <th>File</th>
+            <th>Customer Name</th>
+            <th>Customer email</th>
+            <th>Share link</th>
+            <th>Expiry</th>
+        </tr>\n";
+    
     $data = data_get_sales();
     foreach ($data as $D) {
         $link = "No sales concluded";
@@ -254,7 +262,15 @@ function list_sales() {
             $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
         }
 
-        $out .= "<tr><td>$D->saleS_time</td><td>$D->mode</td><td>$D->full_path</td><td>$D->fullname</td><td>$D->email</td><td>$link</td><td>$D->expiry</dh></tr>\n";
+        $out .= "<tr>
+            <td>$D->saleS_time</td>
+            <td>$D->mode</td>
+            <td>$D->full_path</td>
+            <td>$D->fullname</td>
+            <td>$D->email</td>
+            <td>$link</td>
+            <td>$D->expiry</td>
+        </tr>\n";
     }
 
 
