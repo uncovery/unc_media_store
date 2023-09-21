@@ -46,11 +46,14 @@ function nc_filter_files($files) {
         $P = $F->propstat->prop;
         // let's skip directories
         if (isset($P->resourcetype->collection))  {
+            debug_info("skipping folder", 'nc_filter_files');
             continue;
         }
         // if we have a content type, use it
         if (isset($UMS['nextcloud_content_types'][$P->getcontenttype->__toString()])) {
             $files_copy[] = $F;
+        } else {
+            debug_info("skipping file of content type" . $P->getcontenttype->__toString(), 'nc_filter_files');
         }
     }
 
