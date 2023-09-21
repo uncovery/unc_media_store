@@ -35,7 +35,7 @@ function show_interface() {
     $selected_file_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
     // validate selected date
-    if (validate_date($selected_date, $format = 'Y-m-d') && isset($all_dates[$selected_date])) {
+    if (!is_null($selected_date) && validate_date($selected_date, $format = 'Y-m-d') && isset($all_dates[$selected_date])) {
         $last_date = $selected_date;
     } else { //if there is no date slected, pick the latest one
         $last_date = array_key_last($all_dates);
