@@ -19,7 +19,7 @@ function admin_menu() {
             'Media Store Options',
             'Media store',
             'manage_options',
-            'ums\admin_menu',
+            'ums_admin_menu',
             'ums\admin_settings'
         );
     } else {  // main admin menu
