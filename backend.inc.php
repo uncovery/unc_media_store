@@ -63,7 +63,7 @@ function admin_init() {
         if ($D['type'] == 'text') {
             $callback = 'ums\setting_text_field_render';
         } else if ($D['type'] == 'longtext') {
-            $callback = 'ums\longtext_field_render';
+            $callback = 'ums\setting_longtext_field_render';
         } else if ($D['type'] == 'dropdown') {
             $callback = 'ums\setting_drodown_render';
             $args['options'] = $D['options'];
