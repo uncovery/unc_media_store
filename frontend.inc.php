@@ -26,9 +26,9 @@ function show_interface() {
 
     // get form subission
     // step 1: Select a date
-    $selected_date = filter_input(INPUT_GET, 'ums_date', FILTER_SANITIZE_STRING);
+    $selected_date = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
     // step 2: select recording on that date
-    $selected_file_id = filter_input(INPUT_GET, 'file_id', FILTER_SANITIZE_NUMBER_INT);
+    $selected_file_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
     // validate selected date
     if (validate_date($selected_date, $format = 'Y-m-d') && isset($all_dates[$selected_date])) {
@@ -58,11 +58,10 @@ function show_interface() {
         $out .= "There are $recordings_count recording on $selected_date. Please choose:";
         $out .= recording_list($last_date, $date_recordings, $selected_file_id);
 
-    // if there is only one, show that one directly.
+        // if there is only one, show that one directly.
     } else if (count($date_recordings) == 1) {
         $out .= "There is only one recording on $selected_date:<br>";
         $selected_file_id = $date_recordings[0]->id;
-
     }
 
     // now show the either only one recording or the one selected from the dropdown
@@ -81,12 +80,12 @@ function show_interface() {
 /**
  * Display the date picker for the available dates
  *
- * @param type $data
- * @param type $last_date
- * @param type $selected_date
+ * @global type $wp
+ * @param string $last_date
+ * @param array $data
  * @return string
  */
-function recording_date_picker($last_date, $data) {
+function recording_date_picker(string $last_date, array $data) {
     global $wp;
     $data_field = 'ums_datepicker';
     $out = "\n     <script type=\"text/javascript\">
@@ -98,7 +97,7 @@ function recording_date_picker($last_date, $data) {
     </script>";
     $out .= "<form method=\"GET\" id=\"ums_datepicker_form\">
         <div id=\"ums_datepicker_wrap\">Please select the date your gig was recorded:
-        <input id=\"$data_field\" name=\"ums_date\" type=\"text\" value=\"$last_date\" size=\"10\">
+        <input id=\"$data_field\" name=\"date\" type=\"text\" value=\"$last_date\" size=\"10\">
             </div></form>\n";
     return $out;
 }
@@ -106,18 +105,19 @@ function recording_date_picker($last_date, $data) {
 /**
  * Display the available recordings for a specific date
  *
- * @param type $selected_date_data
+ * @param string $date
+ * @param array $selected_date_data
  * @param type $selected_file_id
  * @return string
  */
-function recording_list($date, $selected_date_data, $selected_file_id = null) {
+function recording_list(string $date, array $selected_date_data, $selected_file_id = null) {
 
     if (is_null($selected_file_id)) {
         $selected_nothing = 'selected';
     }
     $out = "<form method=\"GET\" id=\"ums_timeslot_form\">
         <input name=\"ums_date\" type=\"hidden\" value=\"$date\">
-        <select id=\"recording\" name=\"file_id\" onchange=\"this.form.submit()\">\n
+        <select id=\"recording\" name=\"id\" onchange=\"this.form.submit()\">\n
         <option disabled $selected_nothing value>Please select the timeslot of the recording</option>\n";
 
     foreach ($selected_date_data as $filedata) {
@@ -137,11 +137,8 @@ function recording_list($date, $selected_date_data, $selected_file_id = null) {
 /**
  * display the actual recording and the buy button
  *
- * @global type $UMS
  * @param type $D
- * @param type $selected_date
- * @param type $selected_filename
- * @return string
+ * @return type
  */
 function recording_details($D) {
     $short_start_time = substr($D->start_time, 0, 5);
