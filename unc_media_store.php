@@ -232,7 +232,6 @@ function debug_info($info, $location, $format = false) {
     global $UMS;
 
     if ($UMS['debug_mode'] == 'on') {
-
         if ($format == 'xml') {
             $domxml = new \DOMDocument('1.0');
             $domxml->preserveWhiteSpace = false;
@@ -241,7 +240,6 @@ function debug_info($info, $location, $format = false) {
             $domxml->loadXML($info->asXML());
             $info = $domxml->save();
         }
-
 
         $UMS['debug_info'][] = array(
             'time' => microtime(true),
