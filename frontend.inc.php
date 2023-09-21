@@ -30,7 +30,7 @@ function show_interface() {
 
     // get form subission
     // step 1: Select a date
-    $selected_date = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING);
+    $selected_date = filter_input(INPUT_GET, 'date', FILTER_SANITIZE_ADD_SLASHES);
     // step 2: select recording on that date
     $selected_file_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
