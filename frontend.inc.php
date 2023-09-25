@@ -256,6 +256,7 @@ function show_sales_result($session_id) {
 
         wp_mail($user_email, "Your Media Purchase", $out);
 
+        // send email to admin
         $message = "Hi,<br><br>
             A media file on your website was sold.<br>
             customer name: $user_name<br>
@@ -264,8 +265,6 @@ function show_sales_result($session_id) {
         ";
 
         wp_mail($UMS['success_admin_email'], "Media File Sales report", $message);
-
-
     } else {
         $out = "There was an issue with the transaction. Please contact us if you have trouble.";
     }
