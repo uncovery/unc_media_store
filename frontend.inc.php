@@ -256,9 +256,15 @@ function show_sales_result($session_id) {
 
         wp_mail($user_email, "Your Media Purchase", $out);
 
+        $test_warning = '';
+        if ($UMS['stripe_mode'] == 'test') {
+            $test_warning = "This was not a proper purchase but only done in test mode.<Br>";
+        }
+
         // send email to admin
         $message = "Hi,<br><br>
             A media file on your website was sold.<br>
+            $test_warning
             customer name: $user_name<br>
             customer email: $user_email<br>
             File share Link: $html_url<br>
