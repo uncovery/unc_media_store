@@ -126,5 +126,10 @@ Website Admin',
         'type' => 'longtext',
         'title' => 'Purchase Text',
     ),
-
+    'success_admin_email' => array(
+        'help' => 'Where do you want to send an email when a file was sold?',
+        'default' => 'admin@website.com',
+        'type' => 'text',
+        'title' => 'Admin Email',
+    ),
 );

@@ -255,6 +255,17 @@ function show_sales_result($session_id) {
         $out = str_replace($searches, $replacements, $config_text);
 
         wp_mail($user_email, "Your Media Purchase", $out);
+
+        $message = "Hi,<br><br>
+            A media file on your website was sold.<br>
+            customer name: $user_name<br>
+            customer email: $user_email<br>
+            File share Link: $html_url<br>
+        ";
+
+        wp_mail($UMS['success_admin_email'], "Media File Sales report", $message);
+
+
     } else {
         $out = "There was an issue with the transaction. Please contact us if you have trouble.";
     }
