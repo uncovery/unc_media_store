@@ -1,14 +1,23 @@
 <?php
 
-global $root, $debug, $timezone, $video_date_format, $video_date_sample_string;
+global $root, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 $debug = true;
+$log = true;
+
 // Define the filename format here
 // the length of the sample string needs to match the date format below
 $video_date_sample_string = '2023-09-20 18-01';
 $video_date_format = 'Y-m-d H-i';
 $valid_file_extensions = array('mp4');
+
+if ($log) {
+    $date = new DateTime();
+    $date_str = $date->format('Y-m-d');
+    $logfile = fopen("./logs/log_$date_str.txt", "w") or die("Unable to open logifle!");
+    fwrite($logfile, "Logfile start");
+}
 
 date_default_timezone_set($timezone);
 read_files();
@@ -20,7 +29,7 @@ function read_files() {
     $di = new RecursiveDirectoryIterator($root);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
         // exclude invalid file extensions and directories
-        if ($file->isDir() || in_array($file->getExtension(), $valid_file_extensions)) {
+        if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
         debug_info( '------------- START FILE -------------');
@@ -79,7 +88,6 @@ function read_files() {
             debug_info("Moving $file_path to $target_path");
             $rename_check = rename($file_path, $target_path);
             create_gallery($target_path);
-            return;
         } else {
             debug_info("File is not root, skipping moving file... ");
         }
@@ -207,9 +215,20 @@ function date_folder(string $start_date) {
  * @param string $text
  */
 function debug_info(string $text) {
-    global $debug;
+    global $debug, $log, $logfile;
 
     if ($debug) {
         echo "DBG: $text\n";
     }
+    if ($log) {
+        fwrite($logfile, microtime2string() . " " . $text. "\n");
+    }
+}
+
+function microtime2string() {
+    $microtime = microtime(true);
+
+    $date_obj = \DateTime::createFromFormat('0.u00 U', microtime());
+    $time_str = $date_obj->format('Y-m-d H:i:s u') . substr((string)$microtime, 1, 8) . "ms";
+    return $time_str;
 }
