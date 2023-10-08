@@ -267,7 +267,7 @@ function list_sales() {
         }
 
         $out .= "<tr>
-            <td>$D->saleS_time</td>
+            <td>$D->sales_time</td>
             <td>$D->mode</td>
             <td>$D->full_path</td>
             <td>$D->fullname</td>
