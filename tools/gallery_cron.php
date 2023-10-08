@@ -42,7 +42,6 @@ function read_files() {
         // check the file date so that we delete old files
         $age = calculate_date_age($start_date);
         if ($age->m > 2) {
-
             debug_info( "File is old, deleting it! ");
             // unlink($file_path);
             continue;
@@ -52,6 +51,13 @@ function read_files() {
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
             debug_info( "File is too big, deleting it! ");
+            // unlink($file_path);
+            continue;
+        }
+
+        $check_volume = check_valid_volume($file_path);
+        if (!$check_volume) {
+            echo "INVALID VOLUME FOR FILE $file_path";
             // unlink($file_path);
             continue;
         }
@@ -89,7 +95,12 @@ function read_files() {
             $rename_check = rename($file_path, $target_path);
             create_gallery($target_path);
         } else {
+            $check_volume = check_valid_volume($file_path);
+            if (!$check_volume) {
+                echo "INVALID VOLUME FOR FILE $file_path";
+            }
             debug_info("File is not root, skipping moving file... ");
+
         }
     }
 }
@@ -140,6 +151,35 @@ function get_video_length(string $file_path)  {
     );
 
     return $final;
+}
+
+function get_video_volume(string $file_path) {
+    $command = "ffmpeg -t 10 -i $file_path -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
+    $return = shell_exec($command);
+
+    $pattern = "/max_volume: (.*) dB/m";
+    $matches = array();
+    preg_match_all($pattern, $return, $matches, PREG_SET_ORDER, 0);
+
+    // Print the entire match result
+
+    if (!isset($matches[0][1])) {
+        echo "ERROR checking volume!";
+    }
+
+    return floatval($matches[0][1]);
+}
+
+function check_valid_volume(string $file_path) {
+    $target = -90;
+
+    $volume = get_video_volume($file_path);
+
+    if ($volume < $target) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 /**
