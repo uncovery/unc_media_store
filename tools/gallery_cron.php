@@ -3,8 +3,10 @@
 global $root, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
 $root = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
+date_default_timezone_set($timezone);
 $debug = true;
 $log = true;
+
 
 // Define the filename format here
 // the length of the sample string needs to match the date format below
@@ -15,13 +17,15 @@ $valid_file_extensions = array('mp4');
 if ($log) {
     $date = new DateTime();
     $date_str = $date->format('Y-m-d');
-    $logfile = fopen("./logs/log_$date_str.txt", "w") or die("Unable to open logifle!");
-    fwrite($logfile, "Logfile start");
+    $logfile = fopen("/home/scripts/logs/log_$date_str.txt", "a+") or die("Unable to open logifle!");
+    fwrite($logfile, "Logfile start\n");
 }
 
-date_default_timezone_set($timezone);
+debug_info( '============== PROCESS START ============');
+
 read_files();
 
+debug_info( '============== PROCESS END ============');
 
 function read_files() {
     global $root, $video_date_sample_string, $valid_file_extensions;
@@ -32,8 +36,7 @@ function read_files() {
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
-        debug_info( '------------- START FILE -------------');
-        debug_info( "FOUND FILE: $file_path ");
+        debug_info( '------------- FOUND FILE: $file_path');
         $filename = basename($file_path);
         $start_date = substr($filename, 0, 10);
         // OBS file names start with the date
@@ -42,7 +45,7 @@ function read_files() {
         // check the file date so that we delete old files
         $age = calculate_date_age($start_date);
         if ($age->m > 2) {
-            debug_info( "File is old, deleting it! ");
+            echo "File is old, deleting it!\n";
             // unlink($file_path);
             continue;
         }
@@ -50,14 +53,14 @@ function read_files() {
         // echo "filesize : " . filesize($file_path) . "\n";
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
-            debug_info( "File is too big, deleting it! ");
+            echo "File is too big, deleting it!\n";
             // unlink($file_path);
             continue;
         }
 
         $check_volume = check_valid_volume($file_path);
         if (!$check_volume) {
-            echo "INVALID VOLUME FOR FILE $file_path";
+            echo "INVALID VOLUME FOR FILE $file_path\n";
             // unlink($file_path);
             continue;
         }
@@ -95,15 +98,11 @@ function read_files() {
             $rename_check = rename($file_path, $target_path);
             create_gallery($target_path);
         } else {
-            $check_volume = check_valid_volume($file_path);
-            if (!$check_volume) {
-                echo "INVALID VOLUME FOR FILE $file_path";
-            }
             debug_info("File is not root, skipping moving file... ");
-
         }
     }
 }
+
 
 /**
  * calculate the age of a date
@@ -266,9 +265,12 @@ function debug_info(string $text) {
 }
 
 function microtime2string() {
+    global $timezone;
     $microtime = microtime(true);
 
     $date_obj = \DateTime::createFromFormat('0.u00 U', microtime());
+    $date_obj->setTimezone(new DateTimeZone($timezone));
     $time_str = $date_obj->format('Y-m-d H:i:s u') . substr((string)$microtime, 1, 8) . "ms";
     return $time_str;
 }
+
