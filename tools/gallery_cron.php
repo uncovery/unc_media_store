@@ -1,7 +1,8 @@
 <?php
 
-global $root, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
-$root = '/home/uncovery/Nextcloud/recording';
+global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
+$source = '/home/uncovery/Videos';
+$target = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
 $debug = true;
@@ -28,27 +29,31 @@ read_files();
 debug_info( '============== PROCESS END ============');
 
 function read_files() {
-    global $root, $video_date_sample_string, $valid_file_extensions;
+    global $source;
 
-    $di = new RecursiveDirectoryIterator($root);
+    $di = new RecursiveDirectoryIterator($source);
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
         // exclude invalid file extensions and directories
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
-        debug_info( '------------- FOUND FILE: $file_path');
-        $filename = basename($file_path);
-        $start_date = substr($filename, 0, 10);
-        // OBS file names start with the date
-        $folder = dirname($file_path);
+        debug_info( "------------- FOUND FILE: $file_path");
 
-        // check the file date so that we delete old files
-        $age = calculate_date_age($start_date);
-        if ($age->m > 2) {
-            echo "File is old, deleting it!\n";
-            // unlink($file_path);
+        $fp = fopen($file_path, "r+");
+        if (!flock($fp, LOCK_SH | LOCK_NB)) {
+            echo "ERROR, file is locked";
             continue;
         }
+
+        debug_info( "1");
+
+        // check the file date so that we delete old files
+
+        $check = old_file_clearnup($file_path);
+        if (!$check) {
+            continue;
+        }
+        debug_info( "2");
 
         // echo "filesize : " . filesize($file_path) . "\n";
         // 100 GB limit, delete the file
@@ -57,50 +62,94 @@ function read_files() {
             // unlink($file_path);
             continue;
         }
+        debug_info( "3");
 
         $check_volume = check_valid_volume($file_path);
         if (!$check_volume) {
-            echo "INVALID VOLUME FOR FILE $file_path\n";
-            // unlink($file_path);
             continue;
         }
 
+        debug_info( "4");
+
         // check if we need to move the file
-        if ($folder == $root) {
-            debug_info( "File is in root, moving it!");
-            $duration = get_video_length($file_path);
-            if (!$duration) {
-                continue;
-            }
-
-            // 2023-09-20 18-01
-            $start_time = substr($filename, 0, strlen($video_date_sample_string));
-
-            debug_info("Start time: $start_time");
-
-            $end_time = calculate_end_time($start_time, $duration);
-
-            debug_info("End time: $end_time");
-
-            $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
-
-            debug_info("target filename: $target_filename");
-
-            $target_folder = $root . "/" . date_folder($start_date);
-
-            if (!file_exists($target_folder)) {
-                mkdir($target_folder, 0777, true);
-            }
-
-            $target_path = "$target_folder/$target_filename";
-
-            debug_info("Moving $file_path to $target_path");
-            $rename_check = rename($file_path, $target_path);
-            create_gallery($target_path);
-        } else {
-            debug_info("File is not root, skipping moving file... ");
+        $target_path = target_path($file_path);
+        if (!$target_path) {
+            continue;
         }
+
+        debug_info( "5"); 
+
+        if (file_exists($target_path)) {
+            debug_info("Target file already exists, skipping");
+            continue;
+        }
+
+        debug_info( "6");
+
+        debug_info("Copying $file_path to $target_path");
+        $rename_check = copy($file_path, $target_path);
+        if (!$rename_check) {
+            echo "ERROR COPYING FILE!!";
+            continue;
+        }
+
+        debug_info( "7");
+
+        create_gallery($target_path);
+        create_audio($target_path);
+
+        debug_info( "8");
     }
+}
+
+/**
+ * let's delete old files, but not the audio
+ *
+ * @param type $file_path
+ * @return bool
+ */
+function old_file_clearnup(string $file_path) {
+    $filename = basename($file_path);
+    $start_date = substr($filename, 0, 10);
+    $age = calculate_date_age($start_date);
+    // echo var_export($age, true);
+    if ($age->m >= 1) {
+        echo "WARNING File is old, deleting it!\n";
+        //unlink($file_path);
+        //unlink($file_path . ".jpg");
+        return false;
+    }
+    return true;
+}
+
+// determine the target filename
+function target_path(string $file_path) {
+    global $video_date_sample_string, $target;
+
+    $duration = get_video_length($file_path);
+
+    if (!$duration) {
+        echo "ERROR: video has zero length, skipping";
+        debug_info( "Invalid Duration, canceling more actions.");
+        return false;
+    }
+
+    $filename = basename($file_path);
+    $start_date = substr($filename, 0, 10);
+    $start_time = substr($filename, 0, strlen($video_date_sample_string));
+    debug_info("Start time: $start_time");
+    $end_time = calculate_end_time($start_time, $duration);
+    debug_info("End time: $end_time");
+    $target_filename = str_replace(" ", "_", $start_time) . "_" . $end_time . ".mp4";
+    debug_info("target filename: $target_filename");
+    $target_folder = $target . "/" . date_folder($start_date);
+
+    if (!file_exists($target_folder)) {
+        mkdir($target_folder, 0777, true);
+    }
+
+    $target_path = "$target_folder/$target_filename";
+    return $target_path;
 }
 
 
@@ -164,6 +213,7 @@ function get_video_volume(string $file_path) {
 
     if (!isset($matches[0][1])) {
         echo "ERROR checking volume!";
+        return false;
     }
 
     return floatval($matches[0][1]);
@@ -171,10 +221,13 @@ function get_video_volume(string $file_path) {
 
 function check_valid_volume(string $file_path) {
     $target = -90;
-
     $volume = get_video_volume($file_path);
 
     if ($volume < $target) {
+        echo "INVALID VOLUME ($volume) FOR FILE $file_path\n";
+        //unlink($file_path);
+        //unlink($file_path . ".jpg");
+        //unlink($file_path . ".m4a");
         return false;
     } else {
         return true;
@@ -219,7 +272,7 @@ function create_gallery(string $video_path) {
     $gallery_path = "$video_path.jpg";
 
     if (!file_exists($gallery_path)) {
-        debug_info("creating gallery for $gallery_path");
+        debug_info("creating gallery at $gallery_path");
 
         $command = "vcs '$video_path' -U0 -n 4 -c 2 -H 200 -o $gallery_path";
         shell_exec($command);
@@ -229,6 +282,25 @@ function create_gallery(string $video_path) {
             unlink($gallery_path);
             echo "ERROR CREATING GALLERY: $gallery_path filesize is null\n";
         }
+    }
+}
+
+function create_audio(string $video_path) {
+    $audio_path = "$video_path.m4a";
+
+    if (!file_exists($audio_path)) {
+        debug_info("creating audio at $audio_path");
+
+        $command = "ffmpeg -i $video_path -vn -acodec copy $video_path.m4a";
+        shell_exec($command);
+
+        // delete empty galleries and return
+        if (filesize($audio_path) == 0) {
+            unlink($audio_path);
+            echo "ERROR CREATING AUDIO FILE: $audio_path filesize is null\n";
+        }
+    } else {
+        debug_info("Audio exists...");
     }
 }
 
