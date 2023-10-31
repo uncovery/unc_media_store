@@ -31,6 +31,26 @@ function data_db_create() {
     ) $charset_collate;";
     dbDelta($sql_file);
 
+    $table_name_audio_files = $wpdb->prefix . "ums_audio_files";
+    $sql_audio_file = "CREATE TABLE $table_name_audio_files (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        file_name varchar(128) NOT NULL,
+        full_path varchar(256) NOT NULL,
+        folder varchar(256) NOT NULL,
+        start_date date DEFAULT '0000-00-00' NOT NULL,
+        start_time time DEFAULT '00:00:00' NOT NULL,
+        end_time time DEFAULT '00:00:00' NOT NULL,
+        size varchar(64) NOT NULL,
+        description varchar(256) DEFAULT '' NOT NULL,
+        stripe_product_id varchar(256) DEFAULT '' NOT NULL,
+        stripe_price_id varchar(256) DEFAULT '' NOT NULL,
+        verified datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        UNIQUE KEY `id` (`id`),
+        UNIQUE KEY `full_path` (`full_path`),
+        UNIQUE KEY `start_date` (`start_date`,`full_path`)
+    ) $charset_collate;";
+    dbDelta($sql_audio_file);
+
     $table_name_sales = $wpdb->prefix . "ums_sales";
     $sql_sales = "CREATE TABLE $table_name_sales (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -46,7 +66,7 @@ function data_db_create() {
     ) $charset_collate;";
     dbDelta($sql_sales);
 
-    add_option( "ums_media_store_db_version", "2" );
+    add_option( "ums_media_store_db_version", "3" );
 }
 
 function data_db_remove() {
