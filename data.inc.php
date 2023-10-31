@@ -25,31 +25,12 @@ function data_db_create() {
         stripe_product_id varchar(256) DEFAULT '' NOT NULL,
         stripe_price_id varchar(256) DEFAULT '' NOT NULL,
         verified datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        file_type varchar(64) DEFAULT 'video/mp4' NOT NULL,
         UNIQUE KEY `id` (`id`),
         UNIQUE KEY `full_path` (`full_path`),
         UNIQUE KEY `start_date` (`start_date`,`full_path`)
     ) $charset_collate;";
     dbDelta($sql_file);
-
-    $table_name_audio_files = $wpdb->prefix . "ums_audio_files";
-    $sql_audio_file = "CREATE TABLE $table_name_audio_files (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        file_name varchar(128) NOT NULL,
-        full_path varchar(256) NOT NULL,
-        folder varchar(256) NOT NULL,
-        start_date date DEFAULT '0000-00-00' NOT NULL,
-        start_time time DEFAULT '00:00:00' NOT NULL,
-        end_time time DEFAULT '00:00:00' NOT NULL,
-        size varchar(64) NOT NULL,
-        description varchar(256) DEFAULT '' NOT NULL,
-        stripe_product_id varchar(256) DEFAULT '' NOT NULL,
-        stripe_price_id varchar(256) DEFAULT '' NOT NULL,
-        verified datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        UNIQUE KEY `id` (`id`),
-        UNIQUE KEY `full_path` (`full_path`),
-        UNIQUE KEY `start_date` (`start_date`,`full_path`)
-    ) $charset_collate;";
-    dbDelta($sql_audio_file);
 
     $table_name_sales = $wpdb->prefix . "ums_sales";
     $sql_sales = "CREATE TABLE $table_name_sales (
@@ -73,7 +54,6 @@ function data_db_remove() {
     global $wpdb;
     $tables = array(
         "ums_files",
-        "ums_audio_files",
         "ums_sales",
     );
     foreach ($tables as $table) {
@@ -89,12 +69,6 @@ function read_db() {
     $sql = "SELECT * FROM $table ORDER BY start_date";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
-        $file_array[$D->full_path] = $D;
-    }
-    $audio_table = $wpdb->prefix . "ums_audio_files";
-    $sql_audio = "SELECT * FROM $audio_table ORDER BY start_date";
-    $file_audio_data = $wpdb->get_results($sql_audio);
-    foreach ($file_audio_data as $D) {
         $file_array[$D->full_path] = $D;
     }
     return $file_array;
