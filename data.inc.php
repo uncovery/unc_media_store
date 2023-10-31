@@ -73,6 +73,7 @@ function data_db_remove() {
     global $wpdb;
     $tables = array(
         "ums_files",
+        "ums_audio_files",
         "ums_sales",
     );
     foreach ($tables as $table) {
@@ -88,6 +89,12 @@ function read_db() {
     $sql = "SELECT * FROM $table ORDER BY start_date";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
+        $file_array[$D->full_path] = $D;
+    }
+    $audio_table = $wpdb->prefix . "ums_audio_files";
+    $sql_audio = "SELECT * FROM $audio_table ORDER BY start_date";
+    $file_audio_data = $wpdb->get_results($sql_audio);
+    foreach ($file_audio_data as $D) {
         $file_array[$D->full_path] = $D;
     }
     return $file_array;
