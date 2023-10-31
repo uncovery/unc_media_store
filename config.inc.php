@@ -71,7 +71,7 @@ $UMS['user_settings'] = array(
     'nextcloud_content_types' => array(
         'help' => 'Which content types do you want to look for on nextcloud?',
         'default' => array('video/mp4'),
-        'options' => array('video/mp4' => 'video/mp4'), // , 'image/jpeg' => 'image/jpeg'
+        'options' => array('video/mp4' => 'video/mp4', 'audio/m4a' => 'audio/m4a'), // , 'image/jpeg' => 'image/jpeg'
         'type' => 'multiple',
         'title' => 'Nextcloud Content Type',
     ),
@@ -83,10 +83,16 @@ $UMS['user_settings'] = array(
         'validator' => array('relative_date_time' => true),
     ),
     'media_price' => array(
-        'help' => 'The price for one media file to download. Needs to be in CENTS!',
-        'default' => 50000,
+        'help' => 'The price for one video file to download. Needs to be in CENTS!',
+        'default' => 500,
         'type' => 'text',
-        'title' => 'Media Price',
+        'title' => 'Video Price',
+    ),
+    'audio_price' => array(
+        'help' => 'The price for one Audio file to download. Needs to be in CENTS!',
+        'default' => 300,
+        'type' => 'text',
+        'title' => 'Audio Price',
     ),
     'statement_descriptor' => array(
         'help' => 'An arbitrary string to be displayed on your customer’s credit card or bank statement. While most banks display this information consistently, some may display it incorrectly or not at all. This may be up to 22 characters. The statement description may not include <, >, \, ", ’ characters, and will appear on your customer’s statement in capital letters. Non-ASCII characters are automatically stripped. It must contain at least one letter.',
