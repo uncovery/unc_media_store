@@ -59,7 +59,7 @@ function read_files() {
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
             echo "File is too big, deleting it!\n";
-            // unlink($file_path);
+            // trash_file($file_path);
             continue;
         }
         debug_info( "3");
@@ -77,7 +77,7 @@ function read_files() {
             continue;
         }
 
-        debug_info( "5"); 
+        debug_info( "5");
 
         if (file_exists($target_path)) {
             debug_info("Target file already exists, skipping");
@@ -115,8 +115,8 @@ function old_file_clearnup(string $file_path) {
     // echo var_export($age, true);
     if ($age->m >= 1) {
         echo "WARNING File is old, deleting it!\n";
-        //unlink($file_path);
-        //unlink($file_path . ".jpg");
+        //trash_file($file_path);
+        //trash_file($file_path . ".jpg");
         return false;
     }
     return true;
@@ -225,9 +225,9 @@ function check_valid_volume(string $file_path) {
 
     if ($volume < $target) {
         echo "INVALID VOLUME ($volume) FOR FILE $file_path\n";
-        //unlink($file_path);
-        //unlink($file_path . ".jpg");
-        //unlink($file_path . ".m4a");
+        //trash_file($file_path);
+        //trash_file($file_path . ".jpg");
+        //trash_file($file_path . ".m4a");
         return false;
     } else {
         return true;
@@ -279,7 +279,7 @@ function create_gallery(string $video_path) {
 
         // delete empty galleries and return
         if (filesize($gallery_path) == 0) {
-            unlink($gallery_path);
+            trash_file($gallery_path);
             echo "ERROR CREATING GALLERY: $gallery_path filesize is null\n";
         }
     }
@@ -296,7 +296,7 @@ function create_audio(string $video_path) {
 
         // delete empty galleries and return
         if (filesize($audio_path) == 0) {
-            unlink($audio_path);
+            trash_file($audio_path);
             echo "ERROR CREATING AUDIO FILE: $audio_path filesize is null\n";
         }
     } else {
@@ -346,3 +346,6 @@ function microtime2string() {
     return $time_str;
 }
 
+function trash_file($filepath) {
+    exec('gio trash ' . $filepath);
+}
