@@ -132,8 +132,6 @@ function target_path(string $file_path) {
     $duration = get_video_length($file_path);
 
     if (!$duration) {
-        echo "ERROR: video has zero length, skipping";
-        debug_info( "Invalid Duration, canceling more actions.");
         return false;
     }
 
@@ -190,16 +188,21 @@ function get_video_length(string $file_path)  {
         return false;
     }
 
-    debug_info("Video length check result:" . var_export(trim($return), true));
-
     //  Duration: 01:09:22.11, start: 0.000000, bitrate: 5648 kb/s
-    $hours = substr($return, 12, 2);
-    $minutes = substr($return, 15,2);
+    $hours = intval(substr($return, 12, 2));
+    $minutes = intval(substr($return, 15,2));
 
     $final = array(
-        'hours' => intval($hours),
-        'minutes' => intval($minutes),
+        'hours' => $hours,
+        'minutes' => $minutes,
     );
+
+    if ($hours > 3) {
+        echo "ERROR! Video lenght is above 3 hours!";
+        return false;
+    }
+
+    debug_info("Video length result: $hours:$minutes");
 
     return $final;
 }
