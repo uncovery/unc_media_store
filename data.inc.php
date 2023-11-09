@@ -90,7 +90,7 @@ function data_fetch_date_recordings($date) {
     $recordings = array();
 
     $table = $wpdb->prefix . "ums_files";
-    $sql = "SELECT * FROM $table WHERE start_date = '$date' ORDER BY start_time";
+    $sql = "SELECT * FROM $table WHERE start_date = '$date' GROUP BY start_time ORDER BY start_time";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
         $recordings[] = $D;
