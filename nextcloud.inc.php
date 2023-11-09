@@ -49,7 +49,7 @@ function nc_filter_files($files) {
             debug_info("skipping folder", 'nc_filter_files');
             continue;
         }
-        // if we have a content type, use it
+        // if we have a content type, check it against the config list
         if (isset($UMS['nextcloud_content_types'][$P->getcontenttype->__toString()])) {
             $files_copy[] = $F;
         } else {
