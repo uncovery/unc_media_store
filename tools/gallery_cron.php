@@ -45,16 +45,12 @@ function read_files() {
             continue;
         }
 
-        debug_info( "1");
-
         // check the file date so that we delete old files
 
         $check = old_file_clearnup($file_path);
         if (!$check) {
             continue;
         }
-        debug_info( "2");
-
         // echo "filesize : " . filesize($file_path) . "\n";
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
@@ -62,14 +58,10 @@ function read_files() {
             // trash_file($file_path);
             continue;
         }
-        debug_info( "3");
-
         $check_volume = check_valid_volume($file_path);
         if (!$check_volume) {
             continue;
         }
-
-        debug_info( "4");
 
         // check if we need to move the file
         $target_path = target_path($file_path);
@@ -77,14 +69,10 @@ function read_files() {
             continue;
         }
 
-        debug_info( "5");
-
         if (file_exists($target_path)) {
             debug_info("Target file already exists, skipping");
             continue;
         }
-
-        debug_info( "6");
 
         debug_info("Copying $file_path to $target_path");
         $rename_check = copy($file_path, $target_path);
@@ -93,12 +81,9 @@ function read_files() {
             continue;
         }
 
-        debug_info( "7");
-
         create_gallery($target_path);
         create_audio($target_path);
 
-        debug_info( "8");
     }
 }
 
@@ -202,19 +187,18 @@ function get_video_length(string $file_path)  {
 }
 
 function get_video_volume(string $file_path) {
-    $command = "ffmpeg -t 10 -i $file_path -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
+    $command = "ffmpeg -t 10 -i \"$file_path\" -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
     $return = shell_exec($command);
 
     $pattern = "/max_volume: (.*) dB/m";
     $matches = array();
     preg_match_all($pattern, $return, $matches, PREG_SET_ORDER, 0);
 
-    // Print the entire match result
-
     if (!isset($matches[0][1])) {
-        echo "ERROR checking volume!";
+        echo "ERROR checking volume!\n";
         return false;
     }
+    debug_info("Video volume is ". floatval($matches[0][1]));
 
     return floatval($matches[0][1]);
 }
@@ -228,7 +212,8 @@ function check_valid_volume(string $file_path) {
         //trash_file($file_path);
         //trash_file($file_path . ".jpg");
         //trash_file($file_path . ".m4a");
-        return false;
+        return true;
+        // return false;
     } else {
         return true;
     }
