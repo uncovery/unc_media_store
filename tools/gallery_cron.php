@@ -24,6 +24,7 @@ if ($log) {
 
 debug_info( '============== PROCESS START ============');
 
+check_volume_space();
 read_files();
 
 debug_info( '============== PROCESS END ============');
@@ -47,7 +48,7 @@ function read_files() {
 
         // check the file date so that we delete old files
 
-        $check = old_file_clearnup($file_path);
+        $check = old_file_cleanup($file_path);
         if (!$check) {
             continue;
         }
@@ -88,12 +89,29 @@ function read_files() {
 }
 
 /**
+ * check the space on the HD and alert in case it's full
+ */
+function check_volume_space() {
+    $matches = false;
+    $command = "df -h";
+    $result = shell_exec($command);
+    $re = '/  (?<space>\d\d)% \/home/m';
+    preg_match_all($re, $result, $matches, PREG_SET_ORDER, 0);
+    $check = intval($matches[0]['space']);
+
+    if ($check > 90) {
+        echo "ERROR, SPACE USAGE ABOVE 90%";
+    }
+    debug_info("$check% space free on device");
+}
+
+/**
  * let's delete old files, but not the audio
  *
  * @param type $file_path
  * @return bool
  */
-function old_file_clearnup(string $file_path) {
+function old_file_cleanup(string $file_path) {
     $filename = basename($file_path);
     $start_date = substr($filename, 0, 10);
     $age = calculate_date_age($start_date);
@@ -172,7 +190,7 @@ function get_video_length(string $file_path)  {
         return false;
     }
 
-    debug_info("Video length check result:" . var_export($return, true));
+    debug_info("Video length check result:" . var_export(trim($return), true));
 
     //  Duration: 01:09:22.11, start: 0.000000, bitrate: 5648 kb/s
     $hours = substr($return, 12, 2);
