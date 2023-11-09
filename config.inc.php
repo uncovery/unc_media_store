@@ -71,7 +71,7 @@ $UMS['user_settings'] = array(
     'nextcloud_content_types' => array(
         'help' => 'Which content types do you want to look for on nextcloud?',
         'default' => array('video/mp4'),
-        'options' => array('video/mp4' => 'video/mp4', 'audio/m4a' => 'audio/m4a'), // , 'image/jpeg' => 'image/jpeg'
+        'options' => array('video/mp4' => 'video/mp4', 'audio/mp4' => 'audio/mp4'), // , 'image/jpeg' => 'image/jpeg'
         'type' => 'multiple',
         'title' => 'Nextcloud Content Type',
     ),
