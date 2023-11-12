@@ -1,5 +1,24 @@
 <?php
 
+/**
+ * This script is used to move video files from a source directory to a target directory.
+ * The script reads all the video files from the source directory and moves them to the target directory.
+ * The video files are renamed based on the date and time they were created.
+ * The script also checks the available disk space before moving the files.
+ * 
+ * FILEPATH: /c:/Sync/Code/Wordpress/unc_media_store/tools/gallery_cron.php
+ * 
+ * @global string $source The source directory path.
+ * @global string $target The target directory path.
+ * @global bool $debug A flag to enable/disable debug information.
+ * @global string $timezone The timezone to be used for date/time operations.
+ * @global string $video_date_format The format of the date/time string to be used in the filename.
+ * @global string $video_date_sample_string A sample date/time string to be used in the filename.
+ * @global bool $log A flag to enable/disable logging.
+ * @global resource $logfile The file resource for the log file.
+ * @global array $valid_file_extensions An array of valid file extensions.
+ */
+
 global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
 $source = '/home/uncovery/Videos';
 $target = '/home/uncovery/Nextcloud/recording';
@@ -29,6 +48,15 @@ read_files();
 
 debug_info( '============== PROCESS END ============');
 
+/**
+ * Reads all mp4 files in a directory and performs various operations on them, including:
+ * - Checking file date and deleting old files
+ * - Checking file size and deleting files over 100 GB
+ * - Checking if file is part of a valid volume and skipping if not
+ * - Moving the file to a target directory and creating a gallery and audio file for it
+ *
+ * @return void
+ */
 function read_files() {
     global $source;
 
@@ -42,7 +70,7 @@ function read_files() {
 
         $fp = fopen($file_path, "r+");
         if (!flock($fp, LOCK_SH | LOCK_NB)) {
-            echo "ERROR, file is locked";
+            echo "ERROR, file is locked\n";
             continue;
         }
 
@@ -78,7 +106,7 @@ function read_files() {
         debug_info("Copying $file_path to $target_path");
         $rename_check = copy($file_path, $target_path);
         if (!$rename_check) {
-            echo "ERROR COPYING FILE!!";
+            echo "ERROR COPYING FILE!!\n";
             continue;
         }
 
@@ -89,7 +117,9 @@ function read_files() {
 }
 
 /**
- * check the space on the HD and alert in case it's full
+ * Check the available space on the hard drive and alert if it's above 90%.
+ *
+ * @return void
  */
 function check_volume_space() {
     $matches = false;
@@ -100,7 +130,7 @@ function check_volume_space() {
     $check = intval($matches[0]['space']);
 
     if ($check > 90) {
-        echo "ERROR, SPACE USAGE ABOVE 90%";
+        echo "ERROR, SPACE USAGE ABOVE 90%\n";
     }
     debug_info("$check% space free on device");
 }
@@ -125,7 +155,13 @@ function old_file_cleanup(string $file_path) {
     return true;
 }
 
-// determine the target filename
+/**
+ * Determines the target path for a given file path.
+ *
+ * @param string $file_path The path of the file.
+ *
+ * @return string|false The target path if successful, false otherwise.
+ */
 function target_path(string $file_path) {
     global $video_date_sample_string, $target;
 
@@ -155,11 +191,11 @@ function target_path(string $file_path) {
 
 
 /**
- * calculate the age of a date
+ * Calculates the age of a given date.
  *
- * @global string $timezone
- * @param type $file_date
- * @return type
+ * @global string $timezone The timezone to use for the calculation.
+ * @param string $file_date The date to calculate the age for.
+ * @return DateInterval The difference between the current date and the given date.
  */
 function calculate_date_age(string $file_date) {
     // let's determine the current month
@@ -176,15 +212,15 @@ function calculate_date_age(string $file_date) {
 /**
  * use FFMPEG to calculate a video length
  *
- * @param string $file_path
- * @return bool
+ * @param string $file_path the path of the video file
+ * @return bool|array returns an array with the video length in hours and minutes or false if an error occurs
  */
 function get_video_length(string $file_path)  {
     $command = 'ffmpeg -i "' . $file_path . '" 2>&1 | grep "Duration"';
     $return = shell_exec($command);
 
     if (is_null($return)) {
-        echo "ERROR: Could not determine video length!";
+        echo "ERROR: Could not determine video length!\n";
         return false;
     }
 
@@ -198,7 +234,7 @@ function get_video_length(string $file_path)  {
     );
 
     if ($hours > 3) {
-        echo "ERROR! Video lenght is above 3 hours!";
+        echo "ERROR! Video lenght is above 3 hours!\n";
         return false;
     }
 
@@ -207,6 +243,13 @@ function get_video_length(string $file_path)  {
     return $final;
 }
 
+/**
+ * Calculates the volume of a video file using FFmpeg.
+ *
+ * @param string $file_path The path to the video file.
+ *
+ * @return float|false The volume of the video in decibels, or false if an error occurred.
+ */
 function get_video_volume(string $file_path) {
     $command = "ffmpeg -t 10 -i \"$file_path\" -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
     $return = shell_exec($command);
@@ -224,6 +267,13 @@ function get_video_volume(string $file_path) {
     return floatval($matches[0][1]);
 }
 
+
+/**
+ * Checks if the volume of a video file is valid.
+ *
+ * @param string $file_path The path of the video file to check.
+ * @return bool Returns true if the volume is valid, false otherwise.
+ */
 function check_valid_volume(string $file_path) {
     $target = -90;
     $volume = get_video_volume($file_path);
@@ -291,6 +341,12 @@ function create_gallery(string $video_path) {
     }
 }
 
+/**
+ * Creates an audio file from a given video file path using ffmpeg.
+ *
+ * @param string $video_path The path of the video file.
+ * @return void
+ */
 function create_audio(string $video_path) {
     $audio_path = "$video_path.m4a";
 
@@ -342,6 +398,11 @@ function debug_info(string $text) {
     }
 }
 
+/**
+ * Converts microtime to a formatted string with timezone and milliseconds.
+ *
+ * @return string The formatted time string.
+ */
 function microtime2string() {
     global $timezone;
     $microtime = microtime(true);
@@ -352,6 +413,12 @@ function microtime2string() {
     return $time_str;
 }
 
+/**
+ * Moves a file to the trash using the gio command.
+ *
+ * @param string $filepath The path of the file to be trashed.
+ * @return void
+ */
 function trash_file($filepath) {
     exec('gio trash ' . $filepath);
 }
