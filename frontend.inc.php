@@ -146,8 +146,13 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
  * @return type
  */
 function recording_details($D) {
+    global $UMS;
+
     $short_start_time = substr($D->start_time, 0, 5);
     $short_end_time = substr($D->end_time, 0, 5);
+
+    $costs_video = $UMS['media_price'] / 100;
+    $costs_audio = $UMS['audio_price'] / 100;
 
     $out = "
         <form method=\"POST\" id=\"ums_buy_form\" rel=\"nofollow\">
@@ -159,9 +164,10 @@ function recording_details($D) {
             You will receive a download link via email after payment.
             The link will be active for 1 month.<br>
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
-            <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">
-            <input name=\"buynow\" type=\"submit\" value=\"Buy now (500 HKD)\">
-            <script>document.getElementById('special_field').style.display = 'none';</script>
+            <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">";
+    $out .= "        <input name=\"buynow_video\" type=\"submit\" value=\"Buy Video ($costs_video HKD)\">";
+    $out .= "        <input name=\"buynow_audio\" type=\"submit\" value=\"Buy Audio only ($costs_audio HKD)\">";
+    $out .= "        <script>document.getElementById('special_field').style.display = 'none';</script>
         </form>
     ";
 
@@ -184,6 +190,8 @@ function execute_purchase() {
     $special_field = filter_input(INPUT_POST, 'special_field');
 
     $check_honeypot = (is_null($special_field) || $special_field == '');
+
+    $purchase_type = filter_input(INPUT_POST, 'buynow_video', FILTER_SANITIZE_NUMBER_INT);
 
     if ($check_honeypot && intval($purchase_file_id) > 0) {
         // let's get the product ID from the DB

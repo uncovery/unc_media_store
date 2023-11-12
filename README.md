@@ -4,6 +4,7 @@ A wordpress plugin to sell media files (e.g obs recordings) from a nextcloud sto
 ## requirements:
 - a nextcloud share
 - a stripe account
+- a linux server where OBS runs on. Windows is not supported
 - a linux cronjob running the same machine as the files are located to create thumbnails (optional)
 
 ## problem scenario:
@@ -16,7 +17,6 @@ browse them and buy them via an interface online
 - you do not want to setup a complete backend server for payments like paypal requires since 2023
 
 ## ideal case preparation:
-- You make sure that your filenames do not contain spaces (e.g. OBS studio advanced setttings)
 - You run a script through a cronjob that sorts the files into directories based on their date
 - You run a script through a cronjob that creates thumbnails for your videos
 - You run a script through a cronjob that gives your files names with enough info for users to buy them
@@ -42,12 +42,6 @@ pre-generate share links
 to manually maintain a list.
 - no need to run a payment server environment. Everything is done via the Stripe API
 - no need to maintain a payment page. The stripe hosted payment page is used.
-
-## caveats
-this system is right now assuming that
-- you have a thumbnail generated for each file
-- the filenames are the default OBS file format, but without spaces (%CCYY-%MM-%DD_%hh-%mm-%ss)
-- at this point, the list of files is only generated when the admin interface is opened
 
 ## installation
 - install the plugin
