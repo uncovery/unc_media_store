@@ -27,8 +27,15 @@ $UMS['settings'] = array(
     'thumbs_folder' => plugin_dir_path( __FILE__ ) . "thumbs",
 );
 
+/**
+ * This file contains an array of user settings used to dynamically create the settings menu.
+ * Each setting has a help text, default value, type, title, and optional validator.
+ * The settings include debug mode, Nextcloud server URL, username, password, root folder, folder depth, content types, share expiry, media and audio prices, bank statement descriptor, Stripe mode, and API keys for both live and test environments.
+ * There are also success texts for the user and admin emails.
+ *
+ * @var array $UMS
+ */
 
-// This is used to automatically / dynamically create the settings menu
 $UMS['user_settings'] = array(
     'debug_mode' => array(
         'help' => 'Select if you want to see debug output. In the backend, there will be a new tab here. For the user page, debug info will be displayed at the end of the page. This includes usernames and passwords. Be careful not to expose your info.',
