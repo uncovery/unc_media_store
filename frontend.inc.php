@@ -35,14 +35,12 @@ function show_interface() {
     $selected_file_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
     // validate selected date
-    if (!is_null($selected_date) && validate_date($selected_date, $format = 'Y-m-d') && isset($all_dates[$selected_date])) {
-        $last_date = $selected_date;
-    } else { //if there is no date slected, pick the latest one
-        $last_date = array_key_last($all_dates);
+    if (is_null($selected_date) ||  !validate_date($selected_date, $format = 'Y-m-d') || !isset($all_dates[$selected_date])) {
+        $selected_date = array_key_last($all_dates);
     }
 
     // create the datepicker JS
-    $out = recording_date_picker($last_date, $all_dates);
+    $out = recording_date_picker($selected_date, $all_dates);
 
     // if there is no date selected, let's just use the latest date
     if (!$selected_date) {
@@ -55,12 +53,12 @@ function show_interface() {
         return $out;
     }
 
-    $date_recordings = data_fetch_date_recordings($last_date);
+    $date_recordings = data_fetch_date_recordings($selected_date);
     // if there are several recordings, show the dropdown
     $recordings_count = count($date_recordings);
     if ($recordings_count > 1) {
         $out .= "There are $recordings_count recording on $selected_date. Please choose:";
-        $out .= recording_list($last_date, $date_recordings, $selected_file_id);
+        $out .= recording_list($selected_date, $date_recordings, $selected_file_id);
 
         // if there is only one, show that one directly.
     } else if (count($date_recordings) == 1) {
