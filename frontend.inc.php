@@ -44,9 +44,9 @@ function show_interface() {
     // create the datepicker JS
     $out = recording_date_picker($last_date, $all_dates);
 
-    // if there is no date selected, let's just send the date picker back
+    // if there is no date selected, let's just use the latest date
     if (!$selected_date) {
-        return $out;
+        $selected_date = $last_date;
     }
 
     // we have a date, let's show the recordings that we have
