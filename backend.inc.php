@@ -245,6 +245,8 @@ function list_files(){
 
 
 function list_sales() {
+    global $UMS;
+
     $out = "<h2> List of Sales </h2>
         Please note that only entries with filled-in user details are concluded sales.
         Bots can accidentally do the first step in the sales process and this will create an entry here.
@@ -261,6 +263,11 @@ function list_sales() {
 
     $data = data_get_sales();
     foreach ($data as $D) {
+        // we show not completed sales only in debug mods
+        if ($UMS['debug_mode'] == 'off' && $D->expiry = '0000-00-00') {
+            continue;
+        }
+
         $link = "No sales concluded";
         if (strlen($D->nextcloud_link) > 1) {
             $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
