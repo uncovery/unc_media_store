@@ -175,6 +175,13 @@ function delete_directory($directory) {
 }
 
 
+/**
+ * Validates a date string against a given format.
+ *
+ * @param string $date The date string to validate.
+ * @param string $format The format to validate the date string against. Defaults to 'Y-m-d'.
+ * @return bool Returns true if the date string is valid and matches the given format, false otherwise.
+ */
 function validate_date($date, $format = 'Y-m-d') {
     $d = \DateTime::createFromFormat($format, $date);
     // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
@@ -204,7 +211,12 @@ function make_array_string($data_array) {
 }
 
 
-// convert bytes into human readable numbers
+/**
+ * Convert bytes into human readable numbers
+ *
+ * @param float $bytes The number of bytes to convert
+ * @return string The human readable representation of the bytes
+ */
 function byteConvert($bytes) {
     $bytes_fix = floatval($bytes);
 
@@ -228,6 +240,14 @@ function user_alert($string) {
     return $out;
 }
 
+/**
+ * Logs debug information if debug mode is on.
+ *
+ * @param mixed $info The information to log.
+ * @param string $location The location where the information is logged from.
+ * @param bool|string $format Optional. The format of the information. Defaults to false.
+ * @return void
+ */
 function debug_info($info, $location, $format = false) {
     global $UMS;
 
@@ -249,6 +269,13 @@ function debug_info($info, $location, $format = false) {
     }
 }
 
+/**
+ * Displays debug information in an HTML table format.
+ *
+ * @return string The HTML table containing debug information.
+ *
+ * @global array $UMS The global variable containing debug information.
+ */
 function debug_display() {
     global $UMS;
 
@@ -274,6 +301,13 @@ function debug_display() {
     return $out;
 }
 
+/**
+ * Calculates the difference between two microtime values and returns it as a formatted string.
+ *
+ * @param float $time The current microtime value.
+ * @param float $last_time The previous microtime value.
+ * @return string The difference between the two microtime values as a formatted string.
+ */
 function microtime_diff($time, $last_time) {
     global $UMS;
 
@@ -287,6 +321,11 @@ function microtime_diff($time, $last_time) {
     return $time_str;
 }
 
+/**
+ * Convert microtime to string with timezone and milliseconds.
+ *
+ * @return string The formatted time string.
+ */
 function microtime2string() {
     $microtime = microtime(true);
 
