@@ -5,9 +5,9 @@ if (!defined('WPINC')) {
 }
 
 /**
- * we need to check if the stripe login works before we can process stuff
+ * This function checks if the Stripe login works before processing any further actions.
  *
- * @return bool
+ * @return bool Returns true if the Stripe login works, false otherwise.
  */
 function stripe_test_login() {
     $result = stripe_curl_command('products');
@@ -21,10 +21,12 @@ function stripe_test_login() {
 }
 
 /**
+ * Creates a new product in Stripe.
  *
- * @param type $product_name
- * @param type $description
- * @param type $images
+ * @param string $product_name The name of the product.
+ * @param string $description (Optional) A description of the product.
+ * @param array $images (Optional) An array of image URLs for the product.
+ * @return array The product object returned by Stripe.
  */
 function stripe_create_product(string $product_name, string $description = '', array $images = []) {
     global $UMS;
@@ -41,11 +43,23 @@ function stripe_create_product(string $product_name, string $description = '', a
     return stripe_curl_command('products', $data);
 }
 
+/**
+ * Queries a Stripe product by its ID.
+ *
+ * @param string $product_id The ID of the product to query.
+ * @return mixed The result of the Stripe API call.
+ */
 function stripe_query_product(string $product_id) {
 
     return stripe_curl_command('products/' . $product_id);
 }
 
+/**
+ * Creates a new price for a given product ID in Stripe.
+ *
+ * @param string $product_id The ID of the product to create a price for.
+ * @return array The response from the Stripe API.
+ */
 function stripe_create_price(string $product_id) {
     global $UMS;
 
@@ -58,6 +72,12 @@ function stripe_create_price(string $product_id) {
     return stripe_curl_command('prices', $data);
 }
 
+/**
+ * Creates a payment link for a given price object.
+ *
+ * @param object $price_object The price object to create the payment link for.
+ * @return string The payment link.
+ */
 function stripe_create_payment_link(object $price_object) {
     $data = array(
         'line_items[0][price]' => $price_object->id,
@@ -67,6 +87,12 @@ function stripe_create_payment_link(object $price_object) {
     return stripe_curl_command('payment_links', $data);
 }
 
+/**
+ * Creates a new Stripe checkout session for the given price ID.
+ *
+ * @param string $price_id The ID of the price to use for the checkout session.
+ * @return string The response from the Stripe API.
+ */
 function stripe_create_session(string $price_id) {
     global $wp;
 
@@ -89,7 +115,12 @@ function stripe_list_products() {
     return stripe_curl_command('products');
 }
 
-
+/**
+ * Retrieves session data from Stripe API using session ID.
+ *
+ * @param string $session_id The ID of the session to retrieve data for.
+ * @return mixed Returns the session data as an array or null if session not found.
+ */
 function stripe_get_session_data(string $session_id) {
 
     return stripe_curl_command('checkout/sessions/' . $session_id);
@@ -129,10 +160,10 @@ function stripe_curl_command(string $path, $data = array(), $request = false) {
 
 
 /**
- * returns the stripe key and secret, depending of we are live or testing
+ * Returns the Stripe API key and secret based on whether the website is in live or test mode.
  *
- * @global type $UMS
- * @return type
+ * @global array $UMS An array containing the Stripe API keys and the mode (live or test).
+ * @return array An array containing the Stripe API key and secret, and the URL for the Stripe dashboard.
  */
 function stripe_keys() {
     global $UMS;
