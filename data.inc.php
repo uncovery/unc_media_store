@@ -3,6 +3,17 @@ namespace ums;
 if (!defined('WPINC')) {
     die;
 }
+
+/**
+ * Creates the necessary database tables for the media store plugin.
+ *
+ * This function creates two tables: ums_files and ums_sales. The ums_files table stores information about the media files, 
+ * such as the file name, full path, thumbnail path, folder, start and end times, size, description, and file type. 
+ * The ums_sales table stores information about the sales, such as the file ID, buyer's full name and email, 
+ * Stripe session ID, Nextcloud link, expiry date, sales time, and mode.
+ *
+ * @global wpdb $wpdb WordPress database abstraction object.
+ */
 function data_db_create() {
     global $wpdb;
 
@@ -108,6 +119,15 @@ function data_fetch_one_recording(int $id) {
     return $file_data[0];
 }
 
+/**
+ * Inserts a new sales record into the database and updates the stripe product and price IDs for a given file.
+ *
+ * @param int $file_id The ID of the file being sold.
+ * @param string $session_id The ID of the Stripe session associated with the sale.
+ * @param string $product_id The ID of the Stripe product associated with the sale.
+ * @param string $price_id The ID of the Stripe price associated with the sale.
+ * @return void
+ */
 function data_prime_sales_session($file_id, $session_id, $product_id, $price_id) {
     global $wpdb, $UMS;
 
