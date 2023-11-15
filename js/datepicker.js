@@ -17,10 +17,13 @@ function ums_datepicker_ready(defaultdate, field_id) {
 }
 
 /**
- * this happens just after the datepicker is clicked and before it is displayed
- * 
- * @param {type} date
- * @returns {Array}
+ * Checks if a given date is available for media upload.
+  * this happens just after the datepicker is clicked and before it is displayed
+ * @param {Date} date - The date to check.
+ * @returns {Array} - An array containing three elements:
+ *  - A boolean indicating whether the date is available or not.
+ *  - A formatted string representing the current date.
+ *  - A string indicating whether there is media available on the date or not.
  */
 function ums_datepicker_available(date) {
     off = date.getTimezoneOffset();
