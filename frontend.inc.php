@@ -145,7 +145,7 @@ function recording_details($D) {
     $short_end_time = substr($D->end_time, 0, 5);
 
     $costs_video = $UMS['media_price'] / 100;
-    $costs_audio = $UMS['audio_price'] / 100;
+    // $costs_audio = $UMS['audio_price'] / 100;
 
     $out = "
         <form method=\"POST\" id=\"ums_buy_form\" rel=\"nofollow\">
@@ -159,7 +159,7 @@ function recording_details($D) {
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
             <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">";
     $out .= "        <input name=\"buynow_video\" type=\"submit\" value=\"Buy Video ($costs_video HKD)\">";
-    $out .= "        <input name=\"buynow_audio\" type=\"submit\" value=\"Buy Audio only ($costs_audio HKD)\">";
+    // $out .= "        <input name=\"buynow_audio\" type=\"submit\" value=\"Buy Audio only ($costs_audio HKD)\">";
     $out .= "        <script>document.getElementById('special_field').style.display = 'none';</script>
         </form>
     ";
