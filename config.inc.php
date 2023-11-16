@@ -45,7 +45,7 @@ $UMS['user_settings'] = array(
         'title' => 'Debug Mode',
     ),
     'nextcloud_url' => array(
-        'help' => 'The base URL of the nextcloud server',
+        'help' => 'The base URL of the nextcloud server REQUIRES trailing slash!',
         'default' => 'https://your_nextcloud_server.domain/',
         'type' => 'text',
         'title' => 'Nextcloud URL',
@@ -143,6 +143,12 @@ Website Admin',
         'help' => 'Where do you want to send an email when a file was sold?',
         'default' => 'admin@website.com',
         'type' => 'text',
-        'title' => 'Admin Email',
+        'title' => 'Admin Email where sales results are sent to.',
+    ),
+    'new_file_admin_email' => array(
+        'help' => 'The system will send a copy-paste ready email to this address each time a new file is added?',
+        'default' => 'admin@website.com',
+        'type' => 'text',
+        'title' => 'Admin Email for new file notifications.',
     ),
 );
