@@ -3,10 +3,11 @@ namespace ums;
 if (!defined('WPINC')) {
     die;
 }
+
 /**
- * This shows the date picker and then the files that the customer can buy
+ * This function shows the date picker and the files that the customer can buy.
  *
- * @return string
+ * @return string The HTML output of the interface.
  */
 function show_interface() {
     global $UMS;
@@ -78,9 +79,9 @@ function show_interface() {
  * Display the date picker for the available dates
  *
  * @global type $wp
- * @param string $last_date
- * @param array $data
- * @return string
+ * @param string $last_date The last selected date
+ * @param array $data An array of available dates
+ * @return string The HTML markup for the date picker
  */
 function recording_date_picker(string $last_date, array $data) {
     global $wp;
@@ -102,10 +103,10 @@ function recording_date_picker(string $last_date, array $data) {
 /**
  * Display the available recordings for a specific date
  *
- * @param string $date
- * @param array $selected_date_data
- * @param type $selected_file_id
- * @return string
+ * @param string $date The date for which the recordings are being displayed
+ * @param array $selected_date_data An array containing the data for the selected date
+ * @param mixed $selected_file_id The ID of the selected file (optional)
+ * @return string The HTML code for the recording selection form
  */
 function recording_list(string $date, array $selected_date_data, $selected_file_id = null) {
 
@@ -133,10 +134,10 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
 }
 
 /**
- * display the actual recording and the buy button
+ * Display the actual recording and the buy button.
  *
- * @param type $D
- * @return type
+ * @param mixed $D The recording details.
+ * @return string The HTML output.
  */
 function recording_details($D) {
     global $UMS;
@@ -168,13 +169,17 @@ function recording_details($D) {
 }
 
 /**
- * When the consumer presses the buy button, we get the file info from the DB,
- * Create the product, the price and the session on the stipe server, then retrieve
- * the session link and forward the customer there so that he can pay for the file
+ * Executes the purchase process.
  *
+ * This function is responsible for processing the purchase request. 
+ * It retrieves the necessary data from the POST request, performs validation checks, 
+ * creates the Stripe product and price objects if necessary, creates a new Stripe session, 
+ * and redirects the user to the payment page.
+ * 
  * This function is executed by an add_action in the main file.
  * It's executed on every call, otherwise the redirect would not work
  *
+ * @return void
  */
 function execute_purchase() {
     $purchase_file_id = filter_input(INPUT_POST, 'launch_sales_id', FILTER_SANITIZE_NUMBER_INT);
