@@ -159,7 +159,7 @@ Website Admin',
     ),
     'new_file_admin_email' => array(
         'help' => 'The system will send a copy-paste ready email to this address each time a new file is added?',
-        'default' => 'admin@website.com',
+        'default' => '',
         'type' => 'text',
         'title' => 'Admin Email for new file notifications.',
     ),
