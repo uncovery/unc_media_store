@@ -5,9 +5,9 @@
  * The script reads all the video files from the source directory and moves them to the target directory.
  * The video files are renamed based on the date and time they were created.
  * The script also checks the available disk space before moving the files.
- * 
+ *
  * FILEPATH: /c:/Sync/Code/Wordpress/unc_media_store/tools/gallery_cron.php
- * 
+ *
  * @global string $source The source directory path.
  * @global string $target The target directory path.
  * @global bool $debug A flag to enable/disable debug information.
@@ -66,7 +66,7 @@ function read_files() {
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
             continue;
         }
-        debug_info( "------------- FOUND FILE: $file_path");
+        debug_info( "------------- FOUND FILE: $file_path\n");
 
         $fp = fopen($file_path, "r+");
         if (!flock($fp, LOCK_SH | LOCK_NB)) {
