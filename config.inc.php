@@ -158,7 +158,7 @@ Website Admin',
         'title' => 'Admin Email where sales results are sent to.',
     ),
     'new_file_admin_email' => array(
-        'help' => 'The system will send a copy-paste ready email to this address each time a new file is added?',
+        'help' => 'The system will send a copy-paste ready email to this address each time a new file is added? Leave ampty to disable.',
         'default' => '',
         'type' => 'text',
         'title' => 'Admin Email for new file notifications.',
