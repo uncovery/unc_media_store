@@ -588,11 +588,15 @@ function settings_section_callback() {
  *
  * @param array $D The details of the recording (start date, start time, end time, thumbnail URL, etc.).
  * @param int $id The ID of the recording.
- * @return void
+ * @return bool
  */
 function new_file_notification($D, $id) {
 
     global $UMS;
+
+    if (strlen($UMS['new_file_admin_email']) < 3) {
+        return false;
+    }
 
     $costs_video = $UMS['media_price'] / 100;
 
@@ -615,5 +619,5 @@ function new_file_notification($D, $id) {
 
     Thanks!";
 
-    wp_mail($UMS['new_file_admin_email'], "New video Notification", nl2br($email_body));
+    wp_mail($UMS['new_file_admin_email'], "New video recorded: {$D['start_date']}, {$D['start_time']} until {$D['end_time']}", nl2br($email_body));
 }
