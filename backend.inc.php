@@ -556,8 +556,6 @@ function new_file_notification($D, $id) {
 
     global $UMS;
 
-    $email = $UMS['new_file_admin_email'];
-
     $costs_video = $UMS['media_price'] / 100;
 
     $url = esc_url( get_page_link($UMS['sales_page']));
@@ -579,5 +577,5 @@ function new_file_notification($D, $id) {
 
     Thanks!";
 
-    wp_mail($email, "New video Notification", nl2br($email_body));
+    wp_mail($UMS['new_file_admin_email'], "New video Notification", nl2br($email_body));
 }
