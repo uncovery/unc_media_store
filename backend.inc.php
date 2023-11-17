@@ -282,16 +282,13 @@ function list_sales() {
 
     $data = data_get_sales();
     foreach ($data as $D) {
-        // we show not completed sales only in debug mods
-        if ($UMS['debug_mode'] == 'off' && $D->expiry = '0000-00-00') {
-            continue;
-        }
-
         $link = "No sales concluded";
         if (strlen($D->nextcloud_link) > 1) {
             $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
-        }
-
+        } else if ($UMS['debug_mode'] == 'off') {
+			continue;
+	}
+        
         $out .= "<tr>
             <td>$D->sales_time</td>
             <td>$D->mode</td>
