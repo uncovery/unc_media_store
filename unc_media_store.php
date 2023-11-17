@@ -99,9 +99,9 @@ function plugin_activate() {
 }
 
 /**
- * standard wordpress function to deactivate the plugin.
+ * Deactivates the plugin by unregistering all settings.
  *
- * @global type $UNC_GALLERY
+ * @global type $UMS The global variable for the plugin.
  */
 function plugin_deactivate() {
     global $UMS;
@@ -111,10 +111,17 @@ function plugin_deactivate() {
     foreach ($UMS['user_settings'] as $setting => $D) {
         unregister_setting('ums_settings_page', $prefix . $setting);
     }
-
 }
 
-// cron scheduling
+/**
+ * Activates the file scan cron job.
+ * 
+ * This function schedules the file scan cron job to run hourly if it is not already scheduled.
+ * It also adds an option to store the last run time of the cron job.
+ * 
+ * @global array $UMS The global variable for the plugin settings.
+ * @return void
+ */
 function file_scan_cron_activate() {
     global $UMS;
     if (!wp_next_scheduled ('ums_hourly_filescan')) {
@@ -124,12 +131,20 @@ function file_scan_cron_activate() {
 }
 register_activation_hook( __FILE__, 'ums\file_scan_cron_activate');
 
+/**
+ * Deactivates the file scan cron job.
+ */
 function file_scan_cron_deactivate() {
     wp_clear_scheduled_hook( 'ums_hourly_filescan' );
 }
 register_deactivation_hook( __FILE__, 'ums\file_scan_cron_deactivate');
 
 
+/**
+ * Executes the hourly cron job.
+ * Updates the last run timestamp in the options table.
+ * Reads all files in the media store.
+ */
 function hourly_run() {
     global $UMS;
     $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
@@ -138,28 +153,32 @@ function hourly_run() {
 }
 add_action('ums_hourly_filescan', 'ums\hourly_run', 10, 2);
 
-
 /**
- * Uninstalling the plugin
- *
- * @global type $UNC_GALLERY
+ * Function to handle plugin uninstallation.
+ * Deletes all images (optional), deletes all settings properly,
+ * deletes the thumbnails folder, and removes data from the database.
  */
 function plugin_uninstall() {
     global $UMS;
+    
     // delete all images optional
-
-    //delete all settings properly
+    
+    // delete all settings properly
     $prefix = $UMS['settings_prefix'];
     foreach ($UMS['user_settings'] as $setting => $D) {
         delete_option($prefix . $setting);
     }
+    
     delete_directory($UMS['settings']['thumbs_folder']);
     data_db_remove();
 }
 
+
 /**
- * recursive function to delete directory with all it's files in it
- * @param type $directory
+ * Deletes a directory and all its contents recursively.
+ *
+ * @param string $directory The path to the directory to be deleted.
+ * @return void
  */
 function delete_directory($directory) {
     $it = new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS);
@@ -189,10 +208,14 @@ function validate_date($date, $format = 'Y-m-d') {
 }
 
 /**
- * this converts an array into a string that can be used by cURL as a command
- * line attribute.
- * @param type $data_array
- * @return type
+ * Converts a multidimensional array into a string representation of key-value pairs.
+ *
+ * This function takes an array as input and iterates through its elements. If an element is an array itself,
+ * it further iterates through its sub-elements and appends the key-value pairs to the resulting string.
+ * If an element is not an array, it simply appends the key-value pair to the resulting string.
+ *
+ * @param array $data_array The input array to be converted.
+ * @return string The string representation of the key-value pairs.
  */
 function make_array_string($data_array) {
     $data_pairs = array();
@@ -212,10 +235,10 @@ function make_array_string($data_array) {
 
 
 /**
- * Convert bytes into human readable numbers
+ * Converts bytes to a human-readable format.
  *
- * @param float $bytes The number of bytes to convert
- * @return string The human readable representation of the bytes
+ * @param int $bytes The number of bytes to convert.
+ * @return string The converted value in a human-readable format.
  */
 function byteConvert($bytes) {
     $bytes_fix = floatval($bytes);
