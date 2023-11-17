@@ -101,6 +101,18 @@ $UMS['user_settings'] = array(
         'type' => 'text',
         'title' => 'Audio Price',
     ),
+    'currency' => array(
+        'help' => 'What currency are you dealing with? This will be used in emails along with prices.',
+        'default' => 'USD',
+        'type' => 'text',
+        'title' => 'Your Currency',
+    ),
+    'sales_page'  => array(
+        'help' => 'Select the page where you inserted the shortcode to display the shop.',
+        'default' => '',
+        'type' => 'wp_page',
+        'title' => 'Your Frontend page',
+    ),
     'statement_descriptor' => array(
         'help' => 'An arbitrary string to be displayed on your customer’s credit card or bank statement. While most banks display this information consistently, some may display it incorrectly or not at all. This may be up to 22 characters. The statement description may not include <, >, \, ", ’ characters, and will appear on your customer’s statement in capital letters. Non-ASCII characters are automatically stripped. It must contain at least one letter.',
         'default' => "Media sales",
