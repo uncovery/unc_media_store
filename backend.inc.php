@@ -70,6 +70,8 @@ function admin_init() {
         } else if ($D['type'] == 'multiple'){
             $callback = 'ums\setting_multiple_render';
             $args['options'] = $D['options'];
+        } else if ($D['type'] == 'wp_page'){
+            $callback = 'ums\setting_pages_render';
         }
 
         if (isset($D['validator'])) {
@@ -402,13 +404,11 @@ function process_single_file($F, $db_files, $time_stamp) {
     $end_time = str_replace("-", ":", substr($filename, 17, 5)) . ":00";
     $file_size = byteConvert($P->getcontentlength->__toString());
 
-    $start_time = str_replace("-", ":", substr($filename, 11, 8));
+    $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
     // we add new files
     if (!isset($db_files[$file_path])) {
         $description = "Recording from $start_date $start_time until $end_time";
-        $wpdb->insert(
-            $wpdb->prefix . "ums_files",
-            array(
+        $db_data = array(
                 'file_name' => $filename,
                 'full_path' => $file_path,
                 'thumbnail_path' => $file_path . ".jpg",
@@ -420,8 +420,12 @@ function process_single_file($F, $db_files, $time_stamp) {
                 'size' => $file_size,
                 'verified' => $time_stamp,
                 'description' => $description,
-            ),
         );
+        $wpdb->insert(
+            $wpdb->prefix . "ums_files",
+            $db_data,
+        );
+        new_file_notification($db_data, $wpdb->insert_id);
         $result = "new";
     } else {
         // we still need to update the timestamp to mark the DB Entry as existing
@@ -519,10 +523,61 @@ function setting_multiple_render($A) {
     echo $out;
 }
 
+function setting_pages_render($A) {
+
+    $out = "<select name=\"{$A['setting']}\">\n";
+
+    // lets get all pages
+    $pages = get_pages();
+    foreach ($pages as $P) {
+        $option = $P->ID;
+        $text = $P->post_title;
+        $sel = '';
+        if ($option == $A['value']) {
+           $sel = 'selected';
+        }
+        $out .= "<option value=\"$option\" $sel>$text</option>\n";
+    }
+    $def_text = str_replace(" ", '&nbsp;', $A['options'][$A['default']]);
+    $out .= "</select></td><td>{$A['help']} <strong>Default:</strong>&nbsp;'$def_text'\n";
+    echo $out;
+
+}
+
 /**
  * Callback for the Settings-section. Since we have only one, no need to use this
  * Called in unc_gallery_admin_init
  */
 function settings_section_callback() {
     // echo __( 'Basic Settings', 'wordpress' );
+}
+
+function new_file_notification($D, $id) {
+
+    global $UMS;
+
+    $email = $UMS['new_file_admin_email'];
+
+    $costs_video = $UMS['media_price'] / 100;
+
+    $url = esc_url( get_page_link($UMS['sales_page']));
+
+    $email_body = "
+
+    Dear admin, there is a new recording online available. The recrding was done at
+
+    {$D['start_date']}, {$D['start_time']}
+    and lasted until {$D['end_time']}.
+
+    If you can identify the performer, you can send them the following text:
+
+
+    Hi there!
+    We recorded your latest show! You can buy a high-quailty video file for only $costs_video {$UMS['currency']}!
+    You can see a preview of the video here: <a href=\"{$D['thumbnail_url']}\">{$D['thumbnail_url']}</a>
+    You can by the video buy clicking on this link: <a href=\"$url?id=$id\">$url?id=$id</a>
+
+    Thanks!";
+
+    wp_mail($email, "New video Notification", nl2br($email_body));
 }
