@@ -35,9 +35,9 @@ function admin_menu() {
 }
 
 /**
- * This adds the WordPress features for the admin pages
+ * This function adds the WordPress features for the admin pages.
  *
- * @global type $UNC_GALLERY
+ * @global type $UMS The global variable for the plugin settings.
  */
 function admin_init() {
     global $UMS;
@@ -93,6 +93,13 @@ function admin_init() {
     }
 }
 
+/**
+ * Validates a setting value based on a given validator.
+ *
+ * @param array $validator The validator array containing the field and its corresponding value.
+ * @param mixed $setting_value The value of the setting to be validated.
+ * @return bool Returns true if the setting value is valid, false otherwise.
+ */
 function settings_validation($validator, $setting_value) {
     // validate setting
     $field = key($validator);
@@ -208,6 +215,11 @@ function admin_settings() {
 }
 
 
+/**
+ * Generates an HTML table listing files with their details.
+ *
+ * @return string The generated HTML table.
+ */
 function list_files(){
     $files = read_db();
 
@@ -246,6 +258,11 @@ function list_files(){
 }
 
 
+/**
+ * Retrieves a list of sales and generates an HTML table to display the sales information.
+ *
+ * @return string The HTML code for the sales table.
+ */
 function list_sales() {
     global $UMS;
 
@@ -357,11 +374,14 @@ function read_all_files() {
 /**
  * Process one individual file
  *
- * @global type $wpdb
- * @global type $UMS
- * @param type $F
- * @param type $db_files
- * @return type
+ * This function processes a single file, extracting relevant information from the file's properties and updating the database accordingly.
+ *
+ * @global type $wpdb The WordPress database object.
+ * @global type $UMS The global variable containing Nextcloud configuration settings.
+ * @param type $F The file object to be processed.
+ * @param type $db_files The array of existing file records in the database.
+ * @param type $time_stamp The timestamp indicating the verification time.
+ * @return type The result of the file processing: "new" if a new file record was inserted, "updated" if an existing file record was updated, or false if the file processing failed.
  */
 function process_single_file($F, $db_files, $time_stamp) {
     global $wpdb, $UMS;
@@ -442,6 +462,12 @@ function process_single_file($F, $db_files, $time_stamp) {
     return $result;
 }
 
+/**
+ * Downloads the thumbnail for a given file path if it does not already exist.
+ *
+ * @param string $file_path The path of the file.
+ * @return void
+ */
 function download_thumbnail($file_path) {
     global $UMS;
     // download the thumbnail if we do not have it.
@@ -500,7 +526,6 @@ function setting_drodown_render($A) {
  * @param type $A
  */
 function setting_multiple_render($A) {
-    global $UMS;
     $out = '';
     if (!is_array($A['value'])) {
         $A['value'] = $A['default'];
@@ -523,6 +548,12 @@ function setting_multiple_render($A) {
     echo $out;
 }
 
+/**
+ * Renders a selection dropdown for setting pages.
+ *
+ * @param array $A An array containing the setting, value, options, and default values.
+ * @return void
+ */
 function setting_pages_render($A) {
 
     $out = "<select name=\"{$A['setting']}\">\n";
@@ -552,6 +583,13 @@ function settings_section_callback() {
     // echo __( 'Basic Settings', 'wordpress' );
 }
 
+/**
+ * Sends a notification email to the admin about a new recording being available online.
+ *
+ * @param array $D The details of the recording (start date, start time, end time, thumbnail URL, etc.).
+ * @param int $id The ID of the recording.
+ * @return void
+ */
 function new_file_notification($D, $id) {
 
     global $UMS;
