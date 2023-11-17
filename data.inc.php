@@ -61,6 +61,9 @@ function data_db_create() {
     add_option( "ums_media_store_db_version", "3" );
 }
 
+/**
+ * Removes the specified tables from the database.
+ */
 function data_db_remove() {
     global $wpdb;
     $tables = array(
@@ -73,6 +76,11 @@ function data_db_remove() {
     }
 }
 
+/**
+ * Reads the database and returns an array of file data.
+ *
+ * @return array An array of file data, where the keys are the full paths and the values are the file objects.
+ */
 function read_db() {
     global $wpdb;
     $file_array = array();
@@ -85,6 +93,12 @@ function read_db() {
     return $file_array;
 }
 
+/**
+ * Fetches the unique start dates from the given database.
+ *
+ * @param array $ums_db The database containing the records.
+ * @return array An array of unique start dates.
+ */
 function data_fetch_dates($ums_db) {
     $dates = array();
 
@@ -95,6 +109,12 @@ function data_fetch_dates($ums_db) {
     return $dates;
 }
 
+/**
+ * Fetches recordings for a specific date.
+ *
+ * @param string $date The date for which to fetch recordings.
+ * @return array An array of recordings for the specified date.
+ */
 function data_fetch_date_recordings($date) {
     global $wpdb;
 
@@ -109,6 +129,12 @@ function data_fetch_date_recordings($date) {
     return $recordings;
 }
 
+/**
+ * Fetches a single recording from the database based on its ID.
+ *
+ * @param int $id The ID of the recording to fetch.
+ * @return object The fetched recording data.
+ */
 function data_fetch_one_recording(int $id) {
     global $wpdb;
 
@@ -159,11 +185,21 @@ function data_prime_sales_session($file_id, $session_id, $product_id, $price_id)
     );
 }
 
+/**
+ * Finalizes the sales session by updating the sales data in the database.
+ *
+ * @param string $session_id The session ID of the sales session.
+ * @param string $username The username associated with the sales session.
+ * @param string $email The email associated with the sales session.
+ * @param string $nc_link The Nextcloud link associated with the sales session.
+ * @param string $expiry The expiry date of the sales session.
+ * @return void
+ */
 function data_finalize_sales_session($session_id, $username, $email, $nc_link, $expiry) {
     global $wpdb;
 
     $wpdb->update(
-    $wpdb->prefix . "ums_sales",
+        $wpdb->prefix . "ums_sales",
         array(
             'fullname' => $username,
             'email' => $email,
@@ -173,18 +209,24 @@ function data_finalize_sales_session($session_id, $username, $email, $nc_link, $
         array(
             'stripe_session_id' => $session_id,
         ),
-	array(
+        array(
             '%s',
             '%s',
             '%s',
             '%s',
-	),
-	array(
+        ),
+        array(
             '%s',
-	),
+        ),
     );
 }
 
+/**
+ * Retrieves the file path associated with a given session ID.
+ *
+ * @param string $session_id The session ID to retrieve the file path for.
+ * @return string|false The file path if found, false otherwise.
+ */
 function data_get_file_from_session($session_id) {
     global $wpdb;
 
@@ -205,6 +247,11 @@ function data_get_file_from_session($session_id) {
     return $D[0]->full_path;
 }
 
+/**
+ * Retrieves sales data from the database.
+ *
+ * @return array The sales data.
+ */
 function data_get_sales() {
     global $wpdb;
 
