@@ -5,10 +5,10 @@ if (!defined('WPINC')) {
 }
 
 /**
- * read a nextcloud folder recursively to a given depth and return all the contents
+ * Reads a Nextcloud folder recursively to a given depth and returns all the contents.
  *
- * @global \ums\type $UMS
- * @return type
+ * @global \ums\type $UMS The global UMS variable.
+ * @return type The contents of the Nextcloud folder.
  */
 function nc_curl_read_folder() {
     global $UMS;
@@ -33,10 +33,10 @@ function nc_curl_read_folder() {
 }
 
 /**
- * filter all files that are not valid according to the settings
+ * Filters all files that are not valid according to the settings.
  *
- * @param type $files
- * @return type
+ * @param array $files The array of files to be filtered.
+ * @return array The filtered array of files.
  */
 function nc_filter_files($files) {
     global $UMS;
@@ -63,11 +63,12 @@ function nc_filter_files($files) {
 }
 
 /**
- *  move a file on the nextcloud storage. Replaces spaces with _ for all files.
+ * Move a file on the Nextcloud storage. Replaces spaces with underscores for all files.
+ *
  * @global string $nc_auth
  * @global string $nc_url
- * @param type $file
- * @param type $target_folder
+ * @param string $file The name of the file to be moved.
+ * @param string $target_folder The target folder where the file will be moved to.
  */
 function nc_move_file($file, $target_folder) {
     global $UMS;
@@ -92,11 +93,11 @@ function nc_move_file($file, $target_folder) {
 }
 
 /**
- * download a file from nextcloud WEBDAV via PHP CURL
- * @global type $UMS
- * @param type $path
- * @param type $target
- * @return type
+ * Downloads a file from Nextcloud WEBDAV via PHP CURL.
+ *
+ * @param string $path The path of the file to download.
+ * @param string|false $target The target file path to save the downloaded file. If false, the file content will be returned.
+ * @return string|false The file content if $target is false, otherwise returns true on successful download or false on failure.
  */
 function nc_download_file($path, $target = false) {
     global $UMS;
@@ -123,12 +124,12 @@ function nc_download_file($path, $target = false) {
 }
 
 /**
- * Create a share on nextcloud and return the share URL.
+ * Create a share on Nextcloud and return the share URL.
  *
  * @global type $UMS
- * @param type $path
- * @param type $target
- * @return type
+ * @param type $path The path of the file or folder to be shared.
+ * @param type $expiry The expiry date of the share.
+ * @return type The share URL.
  */
 function nc_create_share($path, $expiry) {
     global $UMS;
@@ -163,11 +164,11 @@ function nc_create_share($path, $expiry) {
  * Prepare a cURL execution by assembling all the variables for the different use cases.
  *
  * @global \ums\type $UMS
- * @param string $url
- * @param type $request
- * @param array $headers
- * @param array $post_fields
- * @return type
+ * @param string $url The URL to send the cURL request to.
+ * @param mixed $request The custom request type (e.g., 'PROPFIND') or false for default request type.
+ * @param array $headers An array of headers in the format 'key' => 'value'.
+ * @param array $post_fields An array of post fields in the format 'key' => 'value'.
+ * @return mixed The output of the cURL execution.
  */
 function nc_curl(string $url, $request = false, array $headers = [], array $post_fields = []) {
     global $UMS;
@@ -212,6 +213,13 @@ function nc_curl(string $url, $request = false, array $headers = [], array $post
     return $output;
 }
 
+/**
+ * Executes a cURL request with the given options.
+ *
+ * @param array $options The cURL options to apply.
+ * @param bool $debug (optional) Whether to enable debug mode. Default is false.
+ * @return mixed The output of the cURL request, or false if there was an error.
+ */
 function nc_curl_execute(array $options, bool $debug = false) {
     global $UMS;
     // open the connection
