@@ -288,7 +288,7 @@ function list_sales() {
         } else if ($UMS['debug_mode'] == 'off') {
 			continue;
 	}
-        
+
         $out .= "<tr>
             <td>$D->sales_time</td>
             <td>$D->mode</td>
@@ -599,9 +599,8 @@ function new_file_notification($D, $id) {
 
     $url = esc_url( get_page_link($UMS['sales_page']));
 
-    $email_body = "
-
-    Dear admin, there is a new recording online available. The recrding was done at
+    $email_body = "Dear admin,
+    there is a new recording online available. The recrding was done at
 
     {$D['start_date']}, {$D['start_time']}
     and lasted until {$D['end_time']}.
@@ -610,8 +609,8 @@ function new_file_notification($D, $id) {
 
 
     Hi there!
-    We recorded your latest show! You can buy a high-quailty video file for only $costs_video {$UMS['currency']}!
-    You can see a preview of the video here: <a href=\"{$D['thumbnail_url']}\">{$D['thumbnail_url']}</a>
+    We recorded your latest show! You can buy a high-quality video file for only $costs_video {$UMS['currency']}!
+    You can see a preview screenshot of the video here: <a href=\"{$D['thumbnail_url']}\">{$D['thumbnail_url']}</a>
     You can by the video buy clicking on this link: <a href=\"$url?id=$id\">$url?id=$id</a>
 
     Thanks!";
