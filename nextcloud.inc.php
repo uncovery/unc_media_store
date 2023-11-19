@@ -76,9 +76,7 @@ function nc_delete_file($file) {
 
     debug_info("deleting file on NC instance", 'nc_delete_file');
 
-    echo "file $file will be deleted because it's more than a month old!";
-
-    // nc_curl($url_file, "DELETE");
+    nc_curl($url_file, "DELETE", [], [], true);
 }
 
 /**
@@ -189,7 +187,7 @@ function nc_create_share($path, $expiry) {
  * @param array $post_fields An array of post fields in the format 'key' => 'value'.
  * @return mixed The output of the cURL execution.
  */
-function nc_curl(string $url, $request = false, array $headers = [], array $post_fields = []) {
+function nc_curl(string $url, $request = false, array $headers = [], array $post_fields = [], bool $debug = false) {
     global $UMS;
 
     $options = array(
@@ -227,7 +225,7 @@ function nc_curl(string $url, $request = false, array $headers = [], array $post
     }
 
     // actually exectute the CURL Command and check for issues
-    $output = nc_curl_execute($options);
+    $output = nc_curl_execute($options, $debug);
 
     return $output;
 }
