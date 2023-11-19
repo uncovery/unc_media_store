@@ -63,6 +63,23 @@ function nc_filter_files($files) {
 }
 
 /**
+ * Delete a file on the Nextcloud storage
+ *
+ * @global \ums\type $UMS
+ * @param type $file
+ */
+function nc_delete_file($file) {
+    global $UMS;
+
+    // then, file to be deleted
+    $url_file = "remote.php/dav/files/" . $UMS['nextcloud_username'] . "/" .  $UMS['nextcloud_folder'] . "/$file";
+
+    debug_info("deleting file on NC instance", 'nc_delete_file');
+
+    nc_curl($url_file, "DELETE");
+}
+
+/**
  * Move a file on the Nextcloud storage. Replaces spaces with underscores for all files.
  *
  * @global string $nc_auth
