@@ -276,7 +276,7 @@ function data_cleanup_expired_links() {
 
     // Prepare the SQL statement
     $table_name_sales = $wpdb->prefix . "ums_sales";
-    $sql = $wpdb->prepare("UPDATE $table_name_sales SET link = '' WHERE expiry < %s", date('Y-m-d'));
+    $sql = $wpdb->prepare("UPDATE $table_name_sales SET nextcloud_link = '' WHERE expiry < %s", date('Y-m-d'));
 
     // Execute the query
     $wpdb->query($sql);
