@@ -76,7 +76,9 @@ function nc_delete_file($file) {
 
     debug_info("deleting file on NC instance", 'nc_delete_file');
 
-    nc_curl($url_file, "DELETE");
+    echo "file $file will be deleted because it's more than a month old!";
+
+    // nc_curl($url_file, "DELETE");
 }
 
 /**
