@@ -84,7 +84,7 @@ $UMS['user_settings'] = array(
     ),
     'nextcloud_share_time' => array(
         'help' => 'How long should the file sharing link work? See the "Relative formats" in the <a href="https://www.php.net/manual/en/datetime.formats.php">PHP Manual</a> for details. Results in a date only, not time.',
-        'default' => '+1 month',
+        'default' => '-1 month',
         'type' => 'text',
         'title' => 'Nextcloud Share Expiry',
         'validator' => array('relative_date_time' => true),
