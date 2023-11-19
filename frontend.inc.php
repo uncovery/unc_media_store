@@ -171,11 +171,11 @@ function recording_details($D) {
 /**
  * Executes the purchase process.
  *
- * This function is responsible for processing the purchase request. 
- * It retrieves the necessary data from the POST request, performs validation checks, 
- * creates the Stripe product and price objects if necessary, creates a new Stripe session, 
+ * This function is responsible for processing the purchase request.
+ * It retrieves the necessary data from the POST request, performs validation checks,
+ * creates the Stripe product and price objects if necessary, creates a new Stripe session,
  * and redirects the user to the payment page.
- * 
+ *
  * This function is executed by an add_action in the main file.
  * It's executed on every call, otherwise the redirect would not work
  *
