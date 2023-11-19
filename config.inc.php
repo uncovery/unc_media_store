@@ -161,6 +161,24 @@ Website Admin',
         'help' => 'The system will send a copy-paste ready email to this address each time a new file is added? Leave ampty to disable.',
         'default' => '',
         'type' => 'text',
-        'title' => 'Admin Email for new file notifications.',
+        'title' => 'Admin Email address for new file notifications.',
+    ),
+    'new_file_email_text' => array(
+        'help' => 'How should the content of the above email look like?  Available variables: {{video_datetime}}, {{video_price}}, {{thumbnail_link}}, {{purchase_link}}',
+        'default' => 'Dear admin,
+    there is a new recording online available. The recrding was done at
+
+    {{video_datetime}}
+
+    If you can identify the performer, you can send them the following text:
+
+    Hi there!
+    We recorded your latest show! You can buy a high-quality video file for only {{video_price}}!
+    You can see a preview screenshot of the video here: {{thumbnail_link}}
+    You can by the video buy clicking on this link: {{purchase_link}}
+
+    Thanks!',
+        'type' => 'longtext',
+        'title' => 'Admin Email text for new file notifications.',
     ),
 );
