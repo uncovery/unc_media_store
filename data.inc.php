@@ -7,9 +7,9 @@ if (!defined('WPINC')) {
 /**
  * Creates the necessary database tables for the media store plugin.
  *
- * This function creates two tables: ums_files and ums_sales. The ums_files table stores information about the media files, 
- * such as the file name, full path, thumbnail path, folder, start and end times, size, description, and file type. 
- * The ums_sales table stores information about the sales, such as the file ID, buyer's full name and email, 
+ * This function creates two tables: ums_files and ums_sales. The ums_files table stores information about the media files,
+ * such as the file name, full path, thumbnail path, folder, start and end times, size, description, and file type.
+ * The ums_sales table stores information about the sales, such as the file ID, buyer's full name and email,
  * Stripe session ID, Nextcloud link, expiry date, sales time, and mode.
  *
  * @global wpdb $wpdb WordPress database abstraction object.
@@ -265,4 +265,19 @@ function data_get_sales() {
     );
 
     return $D;
+}
+
+/**
+ * checks for nextcloud links that are expired and removes the links from the DB
+ *
+ */
+function data_cleanup_expired_links() {
+    global $wpdb;
+
+    // Prepare the SQL statement
+    $table_name_sales = $wpdb->prefix . "ums_sales";
+    $sql = $wpdb->prepare("UPDATE $table_name_sales SET link = '' WHERE expiry < %s", date('Y-m-d'));
+
+    // Execute the query
+    $wpdb->query($sql);
 }
