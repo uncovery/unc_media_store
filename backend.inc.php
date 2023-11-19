@@ -360,8 +360,8 @@ function read_all_files() {
     }
 
     $result = "
-    Files added to DB: $new_file<br>
-    Files removed from DB: $deleted<br>
+    Files new on nextcloud, added to DB: $new_file<br>
+    Files missing on nextcloud, removed from DB: $deleted<br>
     ";
 
     return $result;
@@ -599,21 +599,17 @@ function new_file_notification($D, $id) {
 
     $url = esc_url( get_page_link($UMS['sales_page']));
 
-    $email_body = "Dear admin,
-    there is a new recording online available. The recrding was done at
+    $config_text= nl2br($UMS['new_file_email_text']);
 
-    {$D['start_date']}, {$D['start_time']}
-    and lasted until {$D['end_time']}.
+    // replace the variables:
+    $searches = array( '{{video_datetime}}', '{{video_price}}', '{{thumbnail_link}}', '{{purchase_link}}');
+    $video_datetime = "{$D['start_date']}, {$D['start_time']} and lasted until {$D['end_time']}";
+    $video_price = "$costs_video {$UMS['currency']}";
+    $thumbnail_link = "<a href=\"{$D['thumbnail_url']}\">{$D['thumbnail_url']}</a>";
+    $purchase_link = "<a href=\"$url?id=$id\">$url?id=$id</a>";
+    $replacements = array( $video_datetime, $video_price, $thumbnail_link, $purchase_link);
 
-    If you can identify the performer, you can send them the following text:
+    $email_body = str_replace($searches, $replacements, $config_text);
 
-
-    Hi there!
-    We recorded your latest show! You can buy a high-quality video file for only $costs_video {$UMS['currency']}!
-    You can see a preview screenshot of the video here: <a href=\"{$D['thumbnail_url']}\">{$D['thumbnail_url']}</a>
-    You can by the video buy clicking on this link: <a href=\"$url?id=$id\">$url?id=$id</a>
-
-    Thanks!";
-
-    wp_mail($UMS['new_file_admin_email'], "New video recorded: {$D['start_date']}, {$D['start_time']} until {$D['end_time']}", nl2br($email_body));
+    wp_mail($UMS['new_file_admin_email'], "New video recorded: {$D['start_date']}, {$D['start_time']} until {$D['end_time']}", $email_body);
 }
