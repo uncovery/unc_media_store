@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     2.1
+Version:     2.2
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2
@@ -115,10 +115,10 @@ function plugin_deactivate() {
 
 /**
  * Activates the file scan cron job.
- * 
+ *
  * This function schedules the file scan cron job to run hourly if it is not already scheduled.
  * It also adds an option to store the last run time of the cron job.
- * 
+ *
  * @global array $UMS The global variable for the plugin settings.
  * @return void
  */
@@ -160,15 +160,15 @@ add_action('ums_hourly_filescan', 'ums\hourly_run', 10, 2);
  */
 function plugin_uninstall() {
     global $UMS;
-    
+
     // delete all images optional
-    
+
     // delete all settings properly
     $prefix = $UMS['settings_prefix'];
     foreach ($UMS['user_settings'] as $setting => $D) {
         delete_option($prefix . $setting);
     }
-    
+
     delete_directory($UMS['settings']['thumbs_folder']);
     data_db_remove();
 }
