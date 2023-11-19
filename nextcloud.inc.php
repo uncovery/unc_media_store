@@ -256,7 +256,11 @@ function nc_curl_execute(array $options, bool $debug = false) {
     }
 
     // execture the cURL
-    $output = curl_exec($ch);
+    if ($debug) {
+        var_dump($ch);
+    } else {
+        $output = curl_exec($ch);
+    }
     // close the connection
     curl_close($ch);
 
