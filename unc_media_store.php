@@ -21,6 +21,7 @@ $UMS['start_time'] = microtime(true);
 
 require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
+require_once( plugin_dir_path( __FILE__ ) . "settings.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "stripe.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "nextcloud.inc.php");
