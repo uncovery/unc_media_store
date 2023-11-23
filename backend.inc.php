@@ -231,7 +231,7 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
-    if (file_is_expired($start_date)) {
+    if (file_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files
         nc_delete_file($file_path);
         $result = 'deleted';
