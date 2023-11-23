@@ -273,7 +273,9 @@ function show_sales_result($session_id) {
             $test_warning
             customer name: $user_name<br>
             customer email: $user_email<br>
+            File Path: $file_path<br>
             File share Link: $html_url<br>
+            File Share link will expire: $expiry<br>
         ";
 
         wp_mail($UMS['success_admin_email'], "Media File Sales report", $message);
