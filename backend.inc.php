@@ -57,8 +57,6 @@ function list_sales() {
     global $UMS;
 
     $out = "<h2> List of Sales </h2>
-        Please note that only entries with filled-in user details are concluded sales.
-        Bots can accidentally do the first step in the sales process and this will create an entry here.
         <table class='ums_admin_table'>
         <tr>
             <th>Date</th>
@@ -131,7 +129,6 @@ function read_all_files() {
 
     $new_file = 0;
     foreach ($files_filtered as $F) {
-
         // process this file
         $check = process_single_file($F, $db_files, $time_stamp);
         if ($check == 'new') {
