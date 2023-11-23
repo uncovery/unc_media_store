@@ -72,11 +72,17 @@ function nc_delete_file($file) {
     global $UMS;
 
     // then, file to be deleted
-    $url_file = "remote.php/dav/files/" . $UMS['nextcloud_username'] . "/" .  $UMS['nextcloud_folder'] . "/$file";
+    $url_file = "remote.php/dav/files/" . $UMS['nextcloud_username'] . "/" .  $UMS['nextcloud_folder'] . "$file";
 
-    debug_info("deleting file on NC instance", 'nc_delete_file');
+    debug_info("deleting file on NC instance: $url_file", 'nc_delete_file');
 
-    nc_curl($url_file, "DELETE", [], [], true);
+    // let's not delete files in debug mode
+    $nc_curl_debug = false;
+    if ($UMS['debug_mode'] == 'on') {
+        $nc_curl_debug = true;
+    }
+
+    nc_curl($url_file, "DELETE", [], [], $nc_curl_debug);
 }
 
 /**
@@ -257,7 +263,7 @@ function nc_curl_execute(array $options, bool $debug = false) {
     // execture the cURL
     if ($debug) {
         $dbg = var_export($ch, true);
-        debug_info($dbg , __FUNCTION__);
+        debug_info("function debug is on, not actually executing the code. Options: $dbg" , __FUNCTION__);
     } else {
         $output = curl_exec($ch);
     }
