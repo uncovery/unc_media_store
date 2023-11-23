@@ -110,15 +110,15 @@ function read_all_files() {
 
     $files_filtered = nc_filter_files($nc_files);
 
-    // we check the time now and add the time to all found entries,
-    // then delete the rest since those must have been removed from nextcloud
-    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
-
     // cleanup expired share links
     data_cleanup_expired_links();
 
     // read already known files from the DB to compare
     $db_files = read_db();
+
+    // we check the time now and add the time to all found entries,
+    // then delete the rest since those must have been removed from nextcloud
+    $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
 
     // let's get all the existing time stamps from the DB that are different from
     // the one created above
@@ -136,18 +136,8 @@ function read_all_files() {
         }
     }
 
-    // now we delete all the not updated files from the DB based on the timestamp
-    $deleted = 0;
-    foreach ($old_timestamps as $time_stamp) {
-        $deleted_files = $wpdb->delete(
-            $wpdb->prefix . "ums_files",
-            array('verified' => $time_stamp),  // field to update
-            array('%s',), // string format of timestamp
-        );
-        if ($deleted_files) {
-            $deleted += $deleted_files;
-        }
-    }
+    // remove files not on the nextcloud instance from the database.
+    $deleted = clean_db($old_timestamps);
 
     $result = "
     Files new on nextcloud, added to DB: $new_file<br>
@@ -155,6 +145,31 @@ function read_all_files() {
     ";
 
     return $result;
+}
+
+/**
+ * remove files not on the nextcloud instance from the database.
+ *
+ * @global \ums\type $wpdb
+ * @param type $old_timestamps
+ * @return type
+ */
+function clean_db($old_timestamps) {
+    global $wpdb;
+
+    $deleted = 0;
+    foreach ($old_timestamps as $time_stamp) {
+        $deleted_files = $wpdb->delete(
+            $wpdb->prefix . "ums_files",
+            array('verified' => $time_stamp),  // field to check
+            array('%s',), // string format of timestamp
+        );
+        if ($deleted_files) {
+            $deleted += $deleted_files;
+        }
+    }
+
+    return $deleted;
 }
 
 
