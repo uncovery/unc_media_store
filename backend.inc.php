@@ -128,20 +128,24 @@ function read_all_files() {
     }
 
     $new_file = 0;
+    $old_file = 0;
     foreach ($files_filtered as $F) {
         // process this file
         $check = process_single_file($F, $db_files, $time_stamp);
         if ($check == 'new') {
             $new_file++;
+        } else if ($check == 'deleted') {
+            $old_file++;
         }
     }
 
     // remove files not on the nextcloud instance from the database.
-    $deleted = clean_db($old_timestamps);
+    $missing = clean_db($old_timestamps);
 
     $result = "
     Files new on nextcloud, added to DB: $new_file<br>
-    Files missing on nextcloud, removed from DB: $deleted<br>
+    Files missing on nextcloud, removed from DB: $missing<br>
+    Files deleted from nextcloud due to age: $old_file<br>
     ";
 
     return $result;
@@ -227,8 +231,12 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
-    // if a file does not exist in the database, add it now
-    if (!isset($db_files[$file_path])) {
+    if (file_is_expired($start_date)) {
+        // remove old files
+        nc_delete_file($file_path);
+        $result = 'deleted';
+    } else if (!isset($db_files[$file_path])) {
+        // add new files
         $description = "Recording from $start_date $start_time until $end_time";
         $db_data = array(
                 'file_name' => $filename,
@@ -317,12 +325,19 @@ function new_file_notification($D, $id) {
     wp_mail($UMS['new_file_admin_email'], "New video recorded: {$D['start_date']}, {$D['start_time']} until {$D['end_time']}", $email_body);
 }
 
-
-function check_file_expiry($file_time) {
+/**
+ * return true if a file is older than the set config timespan
+ * for nextcloud retention
+ *
+ * @global \ums\type $UMS
+ * @param type $file_time
+ * @return type
+ */
+function file_is_expired(string $file_time) {
     global $UMS;
 
-    $datetime = DateTime::createFromFormat('Y-m-d', $file_time);
-    $monthAgo = new DateTime();
+    $datetime = \DateTime::createFromFormat('Y-m-d', $file_time);
+    $monthAgo = new \DateTime();
     $monthAgo->modify($UMS['nextcloud_share_time']);
 
     return $datetime < $monthAgo;
