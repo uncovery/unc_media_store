@@ -181,11 +181,12 @@ function nc_create_share($path, $expiry) {
  * Prepare a cURL execution by assembling all the variables for the different use cases.
  *
  * @global \ums\type $UMS
- * @param string $url The URL to send the cURL request to.
- * @param mixed $request The custom request type (e.g., 'PROPFIND') or false for default request type.
- * @param array $headers An array of headers in the format 'key' => 'value'.
- * @param array $post_fields An array of post fields in the format 'key' => 'value'.
- * @return mixed The output of the cURL execution.
+ * @param string $url
+ * @param type $request
+ * @param array $headers
+ * @param array $post_fields
+ * @param bool $debug
+ * @return type
  */
 function nc_curl(string $url, $request = false, array $headers = [], array $post_fields = [], bool $debug = false) {
     global $UMS;
@@ -255,7 +256,8 @@ function nc_curl_execute(array $options, bool $debug = false) {
 
     // execture the cURL
     if ($debug) {
-        var_dump($ch);
+        $dbg = var_export($ch, true);
+        debug_info($dbg , __FUNCTION__);
     } else {
         $output = curl_exec($ch);
     }
