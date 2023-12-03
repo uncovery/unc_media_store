@@ -232,8 +232,8 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     if (file_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files
-        // nc_delete_file($file_path);
-        echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.";
+        nc_delete_file($file_path);
+        // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
     } else if (!isset($db_files[$file_path])) {
         // add new files
