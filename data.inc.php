@@ -288,8 +288,8 @@ function data_file_has_active_nextcloud_share($file_path) {
     $sales_table =  $wpdb->prefix . "ums_sales";
     $D = $wpdb->get_results($wpdb->prepare(
         "SELECT nextcloud_link FROM $sales_table
-        LEFT JOIN $sales_table ON $sales_table.file_id=$files_table.id
-        WHERE $sales_table.full_path = '%s';",
+        LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
+        WHERE $files_table.full_path = '%s';",
         $file_path
     ));
     if ($D[0]['nextcloud_link'] <> '') {
