@@ -148,8 +148,7 @@ function old_file_cleanup(string $file_path) {
     // echo var_export($age, true);
     if ($age->m >= 1) {
         echo "WARNING File is old, deleting it!\n";
-        //trash_file($file_path);
-        //trash_file($file_path . ".jpg");
+        trash_file($file_path);
         return false;
     }
     return true;
@@ -280,10 +279,11 @@ function check_valid_volume(string $file_path) {
 
     if ($volume < $target) {
         echo "INVALID VOLUME ($volume) FOR FILE $file_path\n";
+
         //trash_file($file_path);
         //trash_file($file_path . ".jpg");
         //trash_file($file_path . ".m4a");
-        return true;
+        return false;
         // return false;
     } else {
         return true;
@@ -420,5 +420,6 @@ function microtime2string() {
  * @return void
  */
 function trash_file($filepath) {
-    exec('gio trash ' . $filepath);
+    echo "Deleting file $filepath\n";
+    exec('gio trash "' . $filepath . '"');
 }
