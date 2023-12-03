@@ -243,7 +243,8 @@ function show_sales_result($session_id) {
     if ($payment_status == 'paid' && $status == 'complete') {
         $file_path = data_get_file_from_session($session_id);
 
-        $date_obj = date_create($UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
+        // set the date in the future when the file shall expire
+        $date_obj = date_create("+" . $UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
         $expiry = date_format($date_obj, 'Y-m-d');
 
         $share_url = nc_create_share($file_path, $expiry);
