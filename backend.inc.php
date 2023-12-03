@@ -142,8 +142,7 @@ function read_all_files() {
     // remove files not on the nextcloud instance from the database.
     $missing = clean_db($old_timestamps);
 
-    $result = "
-    Files new on nextcloud, added to DB: $new_file<br>
+    $result = "\nFiles new on nextcloud, added to DB: $new_file<br>
     Files missing on nextcloud, removed from DB: $missing<br>
     Files deleted from nextcloud due to age: $old_file<br>
     ";
@@ -339,7 +338,7 @@ function file_is_expired(string $file_time) {
 
     $datetime = \DateTime::createFromFormat('Y-m-d', $file_time);
     $monthAgo = new \DateTime();
-    $monthAgo->modify($UMS['nextcloud_share_time']);
+    $monthAgo->modify("-" . $UMS['nextcloud_share_time']);
 
     return $datetime < $monthAgo;
 }
