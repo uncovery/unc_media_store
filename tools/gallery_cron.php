@@ -24,7 +24,7 @@ $source = '/home/uncovery/Videos';
 $target = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
-$debug = true;
+$debug = false; // 0 is off, 1 is alerts, 2 is full
 $log = true;
 
 
@@ -70,7 +70,7 @@ function read_files() {
 
         $fp = fopen($file_path, "r+");
         if (!flock($fp, LOCK_SH | LOCK_NB)) {
-            echo "ERROR, file is locked\n";
+            echo "ERROR, file $file_path is locked\n";
             continue;
         }
 
@@ -106,7 +106,7 @@ function read_files() {
         debug_info("Copying $file_path to $target_path");
         $rename_check = copy($file_path, $target_path);
         if (!$rename_check) {
-            echo "ERROR COPYING FILE!!\n";
+            echo "ERROR COPYING FILE $file_path to $target_path!!\n";
             continue;
         }
 
@@ -129,8 +129,8 @@ function check_volume_space() {
     preg_match_all($re, $result, $matches, PREG_SET_ORDER, 0);
     $check = intval($matches[0]['space']);
 
-    if ($check > 90) {
-        echo "ERROR, SPACE USAGE ABOVE 90%\n";
+    if ($check > 80) {
+        echo "ERROR, SPACE USAGE ABOVE 80%\n";
     }
     debug_info("$check% space free on device");
 }
@@ -147,7 +147,7 @@ function old_file_cleanup(string $file_path) {
     $age = calculate_date_age($start_date);
     // echo var_export($age, true);
     if ($age->m >= 1) {
-        echo "WARNING File is old, deleting it!\n";
+        echo "WARNING File $file_path is old, deleting it!\n";
         trash_file($file_path);
         return false;
     }
@@ -219,7 +219,7 @@ function get_video_length(string $file_path)  {
     $return = shell_exec($command);
 
     if (is_null($return)) {
-        echo "ERROR: Could not determine video length!\n";
+        echo "ERROR: Could not determine video length of $file_path !\n";
         return false;
     }
 
@@ -233,7 +233,7 @@ function get_video_length(string $file_path)  {
     );
 
     if ($hours > 3) {
-        echo "ERROR! Video lenght is above 3 hours!\n";
+        echo "ERROR! Video lenght of $file_path is above 3 hours!\n";
         return false;
     }
 
@@ -258,7 +258,7 @@ function get_video_volume(string $file_path) {
     preg_match_all($pattern, $return, $matches, PREG_SET_ORDER, 0);
 
     if (!isset($matches[0][1])) {
-        echo "ERROR checking volume!\n";
+        echo "ERROR checking volume of $file_path!\n";
         return false;
     }
     debug_info("Video volume is ". floatval($matches[0][1]));
