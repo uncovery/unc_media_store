@@ -115,7 +115,7 @@ $UMS['user_settings'] = array(
         'title' => 'Your Currency',
     ),
     'sales_page'  => array(
-        'help' => 'Select the page where you inserted the shortcode to display the shop.',
+        'help' => 'Select the page where you inserted the shortcode to display the shop. The users will be sent here after a successful sales',
         'default' => '',
         'type' => 'wp_page',
         'title' => 'Your Frontend page',
