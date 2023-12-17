@@ -89,6 +89,13 @@ $UMS['user_settings'] = array(
         'title' => 'Nextcloud Share Expiry',
         'validator' => array('relative_date_time' => true),
     ),
+    'nextcloud_file_cleanup' => array(
+        'help' => 'After how much time should file be deleted from Nextcloud? See the "Relative formats" in the <a href="https://www.php.net/manual/en/datetime.formats.php">PHP Manual</a> for details. Results in a date only, not time.',
+        'default' => '1 month',
+        'type' => 'text',
+        'title' => 'Nextcloud File Expiry',
+        'validator' => array('relative_date_time' => true),
+    ),
     'media_price' => array(
         'help' => 'The price for one video file to download. Needs to be in CENTS!',
         'default' => 500,
