@@ -150,7 +150,7 @@ $UMS['user_settings'] = array(
         'help' => 'Please enter the text users see when after they bought a file. Available variables: {{username}}, {{link}} {{expiry}}',
         'default' => 'Dear {{username}},
 
-You can now donwload the file here: {{link}}.
+You can now download the file here: {{link}}.
 This link will be active until {{expiry}}. Please download it as soon as possible.
 Thanks a lot!
 
