@@ -24,7 +24,7 @@ $source = '/home/uncovery/Videos';
 $target = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
-$debug = false; // 0 is off, 1 is alerts, 2 is full
+$debug = false;
 $log = true;
 $error = false;
 
