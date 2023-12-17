@@ -21,6 +21,7 @@ function list_files(){
         <th>End</th>
         <th>Size</th>
         <th>Stripe Product</th>
+        <th>Retention</th>
     </tr>\n";
 
     foreach ($files as $F) {
@@ -32,6 +33,8 @@ function list_files(){
             $url_html = "<a target=\"_blank\" href=\"$url\">Click here</a>";
         }
 
+        $del_date = file_retention_days($F->start_date);
+
         $out .= "<tr>
             <td>$F->full_path</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
@@ -39,6 +42,7 @@ function list_files(){
             <td>$F->end_time</td>
             <td>$F->size</td>
             <td>$url_html</td>
+            <td>$del_date days</td>
         </tr>\n";
     }
 
@@ -340,4 +344,14 @@ function file_storage_is_expired(string $file_time) {
     $monthAgo->modify("-" . $UMS['nextcloud_file_cleanup']);
 
     return $datetime < $monthAgo;
+}
+
+function file_retention_days(string $date) {
+    global $UMS;
+
+    $datetime = \DateTime::createFromFormat('Y-m-d', $date);
+    $datetime->modify($UMS['nextcloud_file_cleanup']);
+    $now = new \DateTime();
+    $interval = $datetime->diff($now);
+    return $interval->days;
 }
