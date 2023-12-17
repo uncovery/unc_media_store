@@ -101,7 +101,6 @@ function list_sales() {
  * @global type $wpdb
  */
 function read_all_files() {
-    global $wpdb;
 
     debug_info("reading all files", 'read_all_files');
 
@@ -230,7 +229,7 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
-    if (file_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
+    if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files
         nc_delete_file($file_path);
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
@@ -333,12 +332,12 @@ function new_file_notification($D, $id) {
  * @param type $file_time
  * @return type
  */
-function file_is_expired(string $file_time) {
+function file_storage_is_expired(string $file_time) {
     global $UMS;
 
     $datetime = \DateTime::createFromFormat('Y-m-d', $file_time);
     $monthAgo = new \DateTime();
-    $monthAgo->modify("-" . $UMS['nextcloud_share_time']);
+    $monthAgo->modify("-" . $UMS['nextcloud_file_cleanup']);
 
     return $datetime < $monthAgo;
 }
