@@ -19,13 +19,14 @@
  * @global array $valid_file_extensions An array of valid file extensions.
  */
 
-global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile;
+global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile, $error;
 $source = '/home/uncovery/Videos';
 $target = '/home/uncovery/Nextcloud/recording';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
 $debug = false; // 0 is off, 1 is alerts, 2 is full
 $log = true;
+$error = false;
 
 
 // Define the filename format here
@@ -47,6 +48,10 @@ check_volume_space();
 read_files();
 
 debug_info( '============== PROCESS END ============');
+
+if ($error && isset($argv[1])) {
+    mail($argv[1], 'OBS File Scan', $error);
+}
 
 /**
  * Reads all mp4 files in a directory and performs various operations on them, including:
@@ -70,7 +75,7 @@ function read_files() {
 
         $fp = fopen($file_path, "r+");
         if (!flock($fp, LOCK_SH | LOCK_NB)) {
-            echo "ERROR, file $file_path is locked\n";
+            error_info("ERROR, file $file_path is locked");
             continue;
         }
 
@@ -83,7 +88,7 @@ function read_files() {
         // echo "filesize : " . filesize($file_path) . "\n";
         // 100 GB limit, delete the file
         if (filesize($file_path) > 100000000000) {
-            echo "File is too big, deleting it!\n";
+            error_info("File is too big, deleting it!");
             // trash_file($file_path);
             continue;
         }
@@ -106,7 +111,7 @@ function read_files() {
         debug_info("Copying $file_path to $target_path");
         $rename_check = copy($file_path, $target_path);
         if (!$rename_check) {
-            echo "ERROR COPYING FILE $file_path to $target_path!!\n";
+            error_info("ERROR COPYING FILE $file_path to $target_path!!");
             continue;
         }
 
@@ -130,7 +135,7 @@ function check_volume_space() {
     $check = intval($matches[0]['space']);
 
     if ($check > 80) {
-        echo "ERROR, SPACE USAGE ABOVE 80%\n";
+        error_info("ERROR, SPACE USAGE ABOVE 80%");
     }
     debug_info("$check% space free on device");
 }
@@ -147,7 +152,7 @@ function old_file_cleanup(string $file_path) {
     $age = calculate_date_age($start_date);
     // echo var_export($age, true);
     if ($age->m >= 1) {
-        echo "WARNING File $file_path is old, deleting it!\n";
+        error_info("WARNING File $file_path is old, deleting it!");
         trash_file($file_path);
         return false;
     }
@@ -219,7 +224,7 @@ function get_video_length(string $file_path)  {
     $return = shell_exec($command);
 
     if (is_null($return)) {
-        echo "ERROR: Could not determine video length of $file_path !\n";
+        error_info("ERROR: Could not determine video length of $file_path !");
         return false;
     }
 
@@ -233,7 +238,7 @@ function get_video_length(string $file_path)  {
     );
 
     if ($hours > 3) {
-        echo "ERROR! Video lenght of $file_path is above 3 hours!\n";
+        error_info("ERROR! Video lenght of $file_path is above 3 hours!");
         return false;
     }
 
@@ -258,7 +263,7 @@ function get_video_volume(string $file_path) {
     preg_match_all($pattern, $return, $matches, PREG_SET_ORDER, 0);
 
     if (!isset($matches[0][1])) {
-        echo "ERROR checking volume of $file_path!\n";
+        error_info("ERROR checking volume of $file_path!");
         return false;
     }
     debug_info("Video volume is ". floatval($matches[0][1]));
@@ -278,7 +283,7 @@ function check_valid_volume(string $file_path) {
     $volume = get_video_volume($file_path);
 
     if ($volume < $target) {
-        echo "INVALID VOLUME ($volume) FOR FILE $file_path\n";
+        error_info("INVALID VOLUME ($volume) FOR FILE $file_path");
 
         //trash_file($file_path);
         //trash_file($file_path . ".jpg");
@@ -336,7 +341,7 @@ function create_gallery(string $video_path) {
         // delete empty galleries and return
         if (filesize($gallery_path) == 0) {
             trash_file($gallery_path);
-            echo "ERROR CREATING GALLERY: $gallery_path filesize is null\n";
+            error_info("ERROR CREATING GALLERY: $gallery_path filesize is null");
         }
     }
 }
@@ -359,7 +364,7 @@ function create_audio(string $video_path) {
         // delete empty galleries and return
         if (filesize($audio_path) == 0) {
             trash_file($audio_path);
-            echo "ERROR CREATING AUDIO FILE: $audio_path filesize is null\n";
+            error_info("ERROR CREATING AUDIO FILE: $audio_path filesize is null");
         }
     } else {
         debug_info("Audio exists...");
@@ -396,6 +401,17 @@ function debug_info(string $text) {
     if ($log) {
         fwrite($logfile, microtime2string() . " " . $text. "\n");
     }
+}
+
+/**
+ * support function to output debug info to the command line
+ * @global bool $debug
+ * @param string $text
+ */
+function error_info(string $text) {
+    global $error;
+
+    $error .= "\n$text";
 }
 
 /**
