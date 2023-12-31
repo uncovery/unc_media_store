@@ -291,8 +291,8 @@ function data_file_has_active_nextcloud_share($file_path) {
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
         WHERE $files_table.full_path = '%s';",
         $file_path
-    ));
-    if ($D[0]['nextcloud_link'] <> '') {
+    ), ARRAY_A);
+    if (isset($D[0]['nextcloud_link']) && $D[0]['nextcloud_link'] <> '') {
         return true;
     }
     return false;
