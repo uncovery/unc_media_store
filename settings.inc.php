@@ -149,7 +149,7 @@ function admin_settings() {
     # Set up tab titles
     $debug_tab = '';
     if ($UMS['debug_mode'] == 'on') {
-        $debug_tab = "<li><a href='#tab4'><span>Debug</span></a></li>";
+        $debug_tab = "<li><a href='#tab4'><span>Debug</span></a></li>\n";
     }
 
     echo "<li><a href='#tab1'><span>Settings</span></a></li>
