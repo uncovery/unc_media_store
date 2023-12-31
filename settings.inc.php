@@ -307,7 +307,10 @@ function setting_pages_render($A) {
         }
         $out .= "<option value=\"$option\" $sel>$text</option>\n";
     }
-    $def_text = str_replace(" ", '&nbsp;', $A['options'][$A['default']]);
+    $def_text = $A['default'];
+    if (isset($A['options'])) {
+        $def_text = str_replace(" ", '&nbsp;', $A['options'][$A['default']]);
+    }
     $out .= "</select></td><td>{$A['help']} <strong>Default:</strong>&nbsp;'$def_text'\n";
     echo $out;
 
