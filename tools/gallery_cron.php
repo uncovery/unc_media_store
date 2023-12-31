@@ -353,23 +353,28 @@ function create_gallery(string $video_path) {
  * @return void
  */
 function create_audio(string $video_path) {
-    $audio_path = "$video_path.m4a";
+    $m4a_path = "$video_path.m4a";
+    $mp3_path = "$video_path.mp3";
 
-    if (!file_exists($audio_path)) {
-        debug_info("creating audio at $audio_path");
-
+    if (!file_exists($m4a_path) && !file_exists($mp3_path)) {
+        debug_info("extracting audio at $m4a_path");
         $command = "ffmpeg -i $video_path -vn -acodec copy $video_path.m4a";
         shell_exec($command);
+    }
+    if (!file_exists($mp3_path)) {
+        debug_info("converting m4a to mp3 audio at $mp3_path");
+        $command = "ffmpeg -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
+        shell_exec($command);
+        unlink($m4a_path);
+    }
 
-        // delete empty galleries and return
-        if (filesize($audio_path) == 0) {
-            trash_file($audio_path);
-            error_info("ERROR CREATING AUDIO FILE: $audio_path filesize is null");
-        }
-    } else {
-        debug_info("Audio exists...");
+    // delete empty galleries and return
+    if (filesize($mp3_path) == 0) {
+        trash_file($mp3_path);
+        error_info("ERROR CREATING AUDIO FILE: $mp3_path filesize is null");
     }
 }
+
 
 /**
  * get a string date and create a year/month folder out of it
