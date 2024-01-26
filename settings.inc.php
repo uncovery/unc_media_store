@@ -130,7 +130,7 @@ function settings_validation($validator, $setting_value) {
  * @global type $UMS
  */
 function admin_settings() {
-    global $UMS;
+    global $UMS, $NC;
     remove_filter('the_content', 'wpautop');
 
     echo '<div class="wrap unc_gallery unc_gallery_admin">

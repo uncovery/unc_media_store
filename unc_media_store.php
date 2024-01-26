@@ -16,7 +16,8 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('WPINC')) {
     die();
 }
-global $UMS;
+global $UMS, $NC;
+$UMS['debug'] = false;
 $UMS['start_time'] = microtime(true);
 
 require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
@@ -25,6 +26,7 @@ require_once( plugin_dir_path( __FILE__ ) . "settings.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "stripe.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "nextcloud.inc.php");
+require_once( plugin_dir_path( __FILE__ ) . "nextcloud.php");
 require_once( plugin_dir_path( __FILE__ ) . "data.inc.php");
 
 // actions on activating and deactivating the plugin
@@ -45,6 +47,20 @@ if (is_admin() === true){ // admin actions
 foreach ($UMS['user_settings'] as $setting => $D) {
     $UMS[$setting] = get_option($UMS['settings_prefix'] . $setting, $D['default']);
 }
+
+// prepare the nextcloud connection
+$nc_debug = false;
+if ($UMS['debug'] == 'on') {
+    $nc_debug = true;
+}
+
+$NC = new \nextcloud(
+    $UMS['nextcloud_url'],
+    $UMS['nextcloud_username'],
+    $UMS['nextcloud_password'],
+    $UMS['nextcloud_folder'],
+    false,
+);
 
 // add shortcode for the frontend
 add_action('init', 'ums\register_shortcodes');

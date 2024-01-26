@@ -105,13 +105,14 @@ function list_sales() {
  * @global type $wpdb
  */
 function read_all_files() {
+    global $UMS, $NC;
 
     debug_info("reading all files", 'read_all_files');
 
     // Read all files from the nextcloud server
-    $nc_files = nc_curl_read_folder();
+    $nc_files = $NC->read_folder($UMS['nextcloud_folder_depth']);
 
-    $files_filtered = nc_filter_files($nc_files);
+    $files_filtered = $NC->filter_files($nc_files, $UMS['nextcloud_content_types']);
 
     // cleanup expired share links
     data_cleanup_expired_links();
@@ -192,7 +193,7 @@ function clean_db($old_timestamps) {
  * @return type The result of the file processing: "new" if a new file record was inserted, "updated" if an existing file record was updated, or false if the file processing failed.
  */
 function process_single_file($F, $db_files, $time_stamp) {
-    global $wpdb, $UMS;
+    global $wpdb, $UMS, $NC;
 
     $result = false;
 
@@ -235,7 +236,7 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files
-        nc_delete_file($file_path);
+        $NC->delete_file($file_path);
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
     } else if (!isset($db_files[$file_path])) {
@@ -283,13 +284,13 @@ function process_single_file($F, $db_files, $time_stamp) {
  * @return void
  */
 function download_thumbnail($file_path) {
-    global $UMS;
+    global $UMS, $NC;
     // download the thumbnail if we do not have it.
     // this assumes that all files have thumbnails
     // fails silently if not
     $thumbnail_file = $UMS['settings']['thumbs_folder'] . "/" . md5($file_path) . ".jpg";
     if (!file_exists($thumbnail_file)) {
-        nc_download_file($file_path . ".jpg", $thumbnail_file);
+        $NC->download_file($file_path . ".jpg", $thumbnail_file);
     }
 }
 

@@ -238,7 +238,7 @@ function get_video_length(string $file_path)  {
     );
 
     if ($hours > 3) {
-        error_info("ERROR! Video lenght of $file_path is above 3 hours!");
+        error_info("ERROR! Video lenght of $file_path is above 3 hours ($hours long)!");
         return false;
     }
 
@@ -361,7 +361,7 @@ function create_audio(string $video_path) {
         $command = "ffmpeg -i $video_path -vn -acodec copy $video_path.m4a";
         shell_exec($command);
     }
-    if (!file_exists($mp3_path)) {
+    if (file_exists($m4a_path) && !file_exists($mp3_path)) {
         debug_info("converting m4a to mp3 audio at $mp3_path");
         $command = "ffmpeg -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
         shell_exec($command);
