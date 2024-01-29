@@ -15,6 +15,7 @@ function list_files(){
 
     $out = "<table class='ums_admin_table'>";
     $out .= "<tr>
+        <th>ID</th>
         <th>Full Path</th>
         <th>Thumbnail</th>
         <th>Start</th>
@@ -36,6 +37,7 @@ function list_files(){
         $del_date = file_retention_days($F->start_date);
 
         $out .= "<tr>
+            <td>$F->id</td>
             <td>$F->full_path</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
             <td>$F->start_date $F->start_time</td>
