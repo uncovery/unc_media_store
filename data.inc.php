@@ -253,13 +253,20 @@ function data_get_file_from_session($session_id) {
  * @return array The sales data.
  */
 function data_get_sales() {
-    global $wpdb;
+    global $wpdb, $UMS;
 
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
+    
+    $filter = '';
+    if ($UMS['stripe_mode'] == 'live') {
+        $filter = "WHERE mode LIKE 'live'";
+    }
+    
     $D = $wpdb->get_results(
         "SELECT * FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
+        $filter
         ORDER BY sales_time DESC;",
     );
 
