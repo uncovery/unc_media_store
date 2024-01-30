@@ -4,7 +4,6 @@ class nextcloud {
     private $hostname;
     private $username;
     private $password;
-    private $rootfolder = '';
     private $debug = false; //options: web console log false
 
     /**
@@ -13,14 +12,12 @@ class nextcloud {
      * @param type $in_host
      * @param type $in_user
      * @param type $in_pass
-     * @param type $in_root
      * @param type $in_debug
      */
-    public function __construct($in_host, $in_user, $in_pass, $in_root, $in_debug) {
+    public function __construct($in_host, $in_user, $in_pass, $in_debug) {
         $this->hostname = $in_host;
         $this->username = $in_user;
         $this->password = $in_pass;
-        $this->rootfolder = $in_root;
         $this->debug = $in_debug;
     }
 
@@ -29,11 +26,18 @@ class nextcloud {
      *
      * @return type The contents of the Nextcloud folder.
      */
-    public function read_folder($depth) {
+    public function read_folder($folder, $depth) {
 
-        $url = "remote.php/dav/files/$this->username/$this->rootfolder";
+        $url = "remote.php/dav/files/$this->username/$folder";
 
-        $output = $this->curl_prepare($url, "PROPFIND", array('Depth' =>$depth));
+        $headers = array(
+            CURLOPT_CUSTOMREQUEST => "PROPFIND",
+            CURLOPT_HTTPHEADER => array("Depth: $depth"),
+        );
+        
+        $this->debug("looking for files $depth folder deep:");
+
+        $output = $this->nc_curl($url, $headers);
         $xml = simplexml_load_string($output);
 
         if ($xml === false) {
@@ -84,11 +88,11 @@ class nextcloud {
      */
     public function delete_file($file) {
         // then, file to be deleted
-        $url_file = "remote.php/dav/files/$this->username/$this->rootfolder$file";
+        $url_file = "remote.php/dav/files/$this->username/$file";
 
         $this->debug("deleting file on NC instance: $url_file");
 
-        $this->curl_prepare($url_file, "DELETE", [], []);
+        $this->nc_curl($url_file, array(CURLOPT_CUSTOMREQUEST => "DELETE"));
     }
 
     /**
@@ -99,24 +103,31 @@ class nextcloud {
      * @param string $file The name of the file to be moved.
      * @param string $target_folder The target folder where the file will be moved to.
      */
-    public function move_file($file, $target_folder) {
+    public function move_file($source_path, $target_folder) {
+
+        $fixed_target_folder = str_replace( ' ', '%20', trim($target_folder));
 
         // first, we create the folder
-        $url = "remote.php/dav/files/$this->username/$this->rootfolder$target_folder";
-        $this->curl_prepare($url , "MKCOL");
-
-        // then, move the file to the folder
-        $url_file = "remote.php/dav/files/$this->username/$this->rootfolder$file";
+        $url = "remote.php/dav/files/$this->username/$fixed_target_folder";
+        $this->nc_curl($url , array(CURLOPT_CUSTOMREQUEST => "MKCOL"));
 
         // make sure we replace spaces in the file
         $str_arr = array(' ', '%20');
-        $fixed_file = str_replace($str_arr, "_", $file);
+        $fixed_source_path = str_replace($str_arr, "_", $source_path);
 
-        $url_dest = "{$this->hostname}remote.php/dav/files/$this->username/$this->rootfolder$target_folder/$fixed_file";
+        $url_dest = "{$this->hostname}remote.php/dav/files/$this->username/$fixed_target_folder/$fixed_source_path";
 
-        $this->debug("moving file on NC instance to $target_folder", 'move_file');
+        $this->debug("moving $fixed_source_path to $target_folder", 'move_file');
 
-        $this->curl_prepare($url_file, "MOVE", array('Destination' => $url_dest));
+        $headers = array(
+            CURLOPT_CUSTOMREQUEST => "MOVE",
+            CURLOPT_HTTPHEADER => "Destination: $url_dest",
+        );
+        
+        // then, move the file to the folder
+        $url_file = "remote.php/dav/files/$this->username/$fixed_source_path";        
+        
+        $this->nc_curl($url_file, $headers);
     }
 
     /**
@@ -127,8 +138,8 @@ class nextcloud {
      * @return string|false The file content if $target is false, otherwise returns true on successful download or false on failure.
      */
     public function download_file($path, $target = false) {
-        $url = "remote.php/dav/files/$this->username/$this->rootfolder$path";
-        $output = $this->curl_prepare($url);
+        $url = "remote.php/dav/files/$this->username/$path";
+        $output = $this->nc_curl($url);
 
         if (strlen($output) == 0) {
             return false;
@@ -148,6 +159,29 @@ class nextcloud {
     }
 
     /**
+     * upload a file from a path to a folder
+     * @param type $path
+     */
+    public function upload_file($target_path, $file_path) {
+
+        $fixed_path = str_replace( ' ', '%20', trim($target_path));
+        $this->debug("Uploading file from path $file_path to $fixed_path");
+        $url = "remote.php/dav/files/$this->username/$fixed_path";
+
+        $this->debug("File size to upload: " . filesize($file_path));
+
+        $headers = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PUT => true,
+            CURLOPT_INFILESIZE => filesize($file_path),
+            CURLOPT_INFILE => fopen($file_path, "r"),
+        );
+        $output = $this->nc_curl($url, $headers);
+        return $output;
+    }
+
+
+    /**
      * Create a share on Nextcloud and return the share URL.
      *
      * @global type $UMS
@@ -158,13 +192,19 @@ class nextcloud {
     public function create_share($path, $expiry) {
         $url = "ocs/v2.php/apps/files_sharing/api/v1/shares";
 
-        $final_path = "/$this->rootfolder/$path";
-
-        $post_fields = array(
-            'path' => $final_path, 'shareType' => 3, 'Permission' => 1, 'expireDate' => $expiry,
+        // make sure we replace spaces in the file
+        $str_arr = array(' ', '%20');
+        $final_path = "/" .  str_replace($str_arr, "_", $path);        
+        
+        $this->debug("Creating share for file $final_path with expiry $expiry");
+        
+        $headers = array(
+            CURLOPT_HTTPHEADER => array('OCS-APIRequest: true'),
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => "path=$final_path&shareType=3&Permission=1&expireDate=$expiry",
         );
 
-        $output = $this->curl_prepare($url, false, array('OCS-APIRequest' => 'true'), $post_fields);
+        $output = $this->nc_curl($url, $headers);
 
         $this->debug($output, 'create_share -> output');
 
@@ -182,82 +222,39 @@ class nextcloud {
         return $array['data']['url'];
     }
 
-    /**
-     * Prepare a cURL execution by assembling all the variables for the different use cases.
-     *
-     * @global \ums\type $UMS
-     * @param string $url
-     * @param type $request
-     * @param array $headers
-     * @param array $post_fields
-     * @param bool $debug
-     * @return type
-     */
-    private function curl_prepare(string $url, $request = false, array $headers = [], array $post_fields = [], bool $debug = false) {
-        $options = array(
-            CURLOPT_URL => $this->hostname . $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_USERPWD => "$this->username:$this->password",
-            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-        );
-
-        // custom requests such as 'PROPFIND' etc
-        if ($request) {
-            $options[CURLOPT_CUSTOMREQUEST] = $request;
-        }
-
-        // headers needs to be an array of strings in the format 'key: value'
-        if (count($headers) > 0 ){
-            foreach ($headers as $key => $value) {
-                $headers[] = "$key: $value";
-            }
-            $options[CURLOPT_HTTPHEADER] = $headers;
-        }
-
-        // post fields need to be in the form or a URL parameter
-        // key1=value1&key2=value2
-        if (count($post_fields) > 0) {
-            $fields = array();
-            foreach ($post_fields as $key => $value) {
-                $fields[] = "$key=$value";
-            }
-            $post_fields = implode("&", $fields);
-            $options[CURLOPT_POST] = true;
-            $options[CURLOPT_POSTFIELDS] = $post_fields;
-        }
-
-        // actually exectute the CURL Command and check for issues
-        $output = $this->curl_execute($options);
-
-        return $output;
-    }
-
-    /**
-     * Executes a cURL request with the given options.
-     *
-     * @param array $options The cURL options to apply.
-     * @param bool $debug (optional) Whether to enable debug mode. Default is false.
-     * @return mixed The output of the cURL request, or false if there was an error.
-     */
-    private function curl_execute(array $options) {
+    private function nc_curl(string $url, array $headers = []) {
         // open the connection
         $ch = curl_init();
 
-        // apply all the options
-        foreach ($options as $k => $v) {
-            curl_setopt($ch, $k, $v);
+        $this->debug("Sending request to URL $this->hostname$url");
+        $this->debug("cURL Headers:");
+        $this->debug($headers);
+
+        curl_setopt($ch, CURLOPT_URL, $this->hostname . $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERPWD, "$this->username:$this->password");
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+
+        foreach ($headers as $key => $value) {
+            if (is_string($key)) {
+                echo "$key $value invalid";
+                die();
+            }
+            curl_setopt($ch, $key, $value);
         }
 
         $output = curl_exec($ch);
+        $this->debug("CURL POUTPUT: ");
+        $this->debug($output);
 
         // close the connection
         curl_close($ch);
 
         // check for error
         if ($output === false) {
-            throw new Exception("The Nextcloud connection failed. Please check your URL. Options used: " . var_export($options, true));
+            throw new Exception("The Nextcloud connection failed. Please check your URL.");
         } else if (strstr($output, 'Sabre\\DAV\\Exception')) {
             throw new Exception("There was an error connecting to Nextcloud. The returned error was:<br><pre>$output</pre>");
         }

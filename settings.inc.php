@@ -12,7 +12,6 @@ if (!defined('WPINC')) {
 function admin_menu() {
     global $UMS;
     // the main page where we manage the options
-
     // in the settings page
     if (isset($UMS['settings_location']) && $UMS['settings_location'] == 'submenu') {
         $main_options_page_hook_suffix = add_options_page(
@@ -165,11 +164,6 @@ function admin_settings() {
     // if nexctcloud or stripe do not work, let the user know.
     $settings_ok = true;
     if (stripe_test_login() === false)  {
-        $settings_ok = false;
-    }
-
-
-    if (nc_curl_read_folder() === false) {
         $settings_ok = false;
     }
 

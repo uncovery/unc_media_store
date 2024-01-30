@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     2.4
+Version:     2.6
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2
@@ -25,7 +25,6 @@ require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "settings.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "stripe.inc.php");
-require_once( plugin_dir_path( __FILE__ ) . "nextcloud.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "nextcloud.php");
 require_once( plugin_dir_path( __FILE__ ) . "data.inc.php");
 
@@ -58,8 +57,7 @@ $NC = new \nextcloud(
     $UMS['nextcloud_url'],
     $UMS['nextcloud_username'],
     $UMS['nextcloud_password'],
-    $UMS['nextcloud_folder'],
-    false,
+    'web',
 );
 
 // add shortcode for the frontend

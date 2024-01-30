@@ -28,7 +28,6 @@ $debug = false;
 $log = true;
 $error = false;
 
-
 // Define the filename format here
 // the length of the sample string needs to match the date format below
 $video_date_sample_string = '2023-09-20 18-01';
@@ -239,6 +238,11 @@ function get_video_length(string $file_path)  {
 
     if ($hours > 3) {
         error_info("ERROR! Video lenght of $file_path is above 3 hours ($hours long)!");
+        return false;
+    }
+
+    if ($hours < 0 && $minutes < 10) {
+        error_info("ERROR! Video lenght of $file_path is above below 10 minutes! ($hours:$minutes minutes long)!");
         return false;
     }
 

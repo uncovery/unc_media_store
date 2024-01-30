@@ -247,7 +247,7 @@ function show_sales_result($session_id) {
         $date_obj = date_create("+" . $UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
         $expiry = date_format($date_obj, 'Y-m-d');
 
-        $share_url = $NC->create_share($file_path, $expiry);
+        $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
 
         data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
 

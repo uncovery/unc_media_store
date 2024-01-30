@@ -68,6 +68,7 @@ function list_sales() {
             <th>Date</th>
             <th>Mode</th>
             <th>File</th>
+            <th>ID</th>
             <th>Customer Name</th>
             <th>Customer email</th>
             <th>Share link</th>
@@ -87,13 +88,13 @@ function list_sales() {
             <td>$D->sales_time</td>
             <td>$D->mode</td>
             <td>$D->full_path</td>
+            <td>$D->file_id</td>
             <td>$D->fullname</td>
             <td>$D->email</td>
             <td>$link</td>
             <td>$D->expiry</td>
         </tr>\n";
     }
-
 
     $out .= "</table>\n";
     return $out;
@@ -112,7 +113,7 @@ function read_all_files() {
     debug_info("reading all files", 'read_all_files');
 
     // Read all files from the nextcloud server
-    $nc_files = $NC->read_folder($UMS['nextcloud_folder_depth']);
+    $nc_files = $NC->read_folder('recording', $UMS['nextcloud_folder_depth']);
 
     $files_filtered = $NC->filter_files($nc_files, $UMS['nextcloud_content_types']);
 
@@ -238,7 +239,7 @@ function process_single_file($F, $db_files, $time_stamp) {
 
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files
-        $NC->delete_file($file_path);
+        $NC->delete_file($UMS['nextcloud_folder'] . $file_path);
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
     } else if (!isset($db_files[$file_path])) {
@@ -292,7 +293,7 @@ function download_thumbnail($file_path) {
     // fails silently if not
     $thumbnail_file = $UMS['settings']['thumbs_folder'] . "/" . md5($file_path) . ".jpg";
     if (!file_exists($thumbnail_file)) {
-        $NC->download_file($file_path . ".jpg", $thumbnail_file);
+        $NC->download_file($UMS['nextcloud_folder'] . $file_path . ".jpg", $thumbnail_file);
     }
 }
 
