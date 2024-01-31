@@ -129,7 +129,7 @@ function settings_validation($validator, $setting_value) {
  * @global type $UMS
  */
 function admin_settings() {
-    global $UMS, $NC;
+    global $UMS, $STRP;
     remove_filter('the_content', 'wpautop');
 
     echo '<div class="wrap unc_gallery unc_gallery_admin">
@@ -163,7 +163,7 @@ function admin_settings() {
 
     // if nexctcloud or stripe do not work, let the user know.
     $settings_ok = true;
-    if (stripe_test_login() === false)  {
+    if ($STRP->test_login() === false)  {
         $settings_ok = false;
     }
 

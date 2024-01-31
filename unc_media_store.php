@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     2.6
+Version:     2.7
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2
@@ -16,7 +16,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('WPINC')) {
     die();
 }
-global $UMS, $NC;
+global $UMS, $NC, $STRP;
 $UMS['debug'] = false;
 $UMS['start_time'] = microtime(true);
 
@@ -24,9 +24,9 @@ require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "settings.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
-require_once( plugin_dir_path( __FILE__ ) . "stripe.inc.php");
-require_once( plugin_dir_path( __FILE__ ) . "nextcloud.php");
 require_once( plugin_dir_path( __FILE__ ) . "data.inc.php");
+require_once( plugin_dir_path( __FILE__ ) . "libraries\stripe.inc.php");
+require_once( plugin_dir_path( __FILE__ ) . "libraries\nextcloud.php");
 
 // actions on activating and deactivating the plugin
 register_activation_hook( __FILE__, 'ums\plugin_activate');
@@ -48,16 +48,24 @@ foreach ($UMS['user_settings'] as $setting => $D) {
 }
 
 // prepare the nextcloud connection
-$nc_debug = false;
+$lib_debug = false;
 if ($UMS['debug'] == 'on') {
-    $nc_debug = true;
+    $lib_debug = 'web';
+
 }
 
 $NC = new \nextcloud(
     $UMS['nextcloud_url'],
     $UMS['nextcloud_username'],
     $UMS['nextcloud_password'],
-    'web',
+    $lib_debug,
+);
+
+$STRP = new \stripe(
+    $UMS['stripe_mode'],
+    $UMS['stripe_api_secret_key'],
+    $UMS['stripe_api_test_secret_key'],
+    $lib_debug,
 );
 
 // add shortcode for the frontend

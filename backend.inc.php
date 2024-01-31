@@ -11,6 +11,7 @@ if (!defined('WPINC')) {
  * @return string The generated HTML table.
  */
 function list_files(){
+    global $STRP;
     $files = read_db();
 
     $out = "<table class='ums_admin_table'>";
@@ -27,10 +28,10 @@ function list_files(){
 
     foreach ($files as $F) {
         $thumb_url =  $F->thumbnail_url;
-        $stripe_data = stripe_keys();
+        $stripe_url = $STRP->stripe_url();
         $url_html = '';
         if ($F->stripe_product_id != '') {
-            $url =  $stripe_data['url'] . "products/$F->stripe_product_id";
+            $url =  $stripe_url . "products/$F->stripe_product_id";
             $url_html = "<a target=\"_blank\" href=\"$url\">Click here</a>";
         }
 

@@ -182,6 +182,7 @@ function recording_details($D) {
  * @return void
  */
 function execute_purchase() {
+    global $STRP, $UMS, $wp;
     $purchase_file_id = filter_input(INPUT_POST, 'launch_sales_id', FILTER_SANITIZE_NUMBER_INT);
     // this is a honey-pot field to deter bots. IT's hidden via JS,
     // but if there is content, we know the user is fake.
@@ -197,20 +198,21 @@ function execute_purchase() {
 
         // first create the stripe product
         if ($P->stripe_product_id == '') {
-            $product_object = stripe_create_product($P->file_name, $P->description, array($P->thumbnail_url));
+            $product_object = $STRP->create_product($P->file_name, $P->description, $UMS['statement_descriptor'], array($P->thumbnail_url));
             $product_id = $product_object->id;
         } else {
             $product_id = $P->stripe_product_id;
         }
         // second create the stripe price object
         if ($P->stripe_price_id == '') {
-            $price_object = stripe_create_price($product_id);
+            $price_object = $STRP->create_price($product_id, $UMS['media_price'], $UMS['currency']);
             $price_id = $price_object->id;
         } else {
             $price_id = $P->stripe_price_id;
         }
         // lastly let's create the stripe session, that is always new
-        $session = stripe_create_session($price_id);
+        $url = home_url($wp->request);
+        $session = $this->create_session($url, $price_id, 1);
 
         data_prime_sales_session($purchase_file_id, $session->id, $product_id, $price_id);
 
@@ -230,10 +232,10 @@ function execute_purchase() {
  * @return string
  */
 function show_sales_result($session_id) {
-    global $UMS, $NC;
+    global $UMS, $NC, $STRP;
     // get the sesson data
 
-    $session_object = stripe_get_session_data($session_id);
+    $session_object = $this->get_session_data($session_id);
 
     $user_email = $session_object->customer_details->email;
     $user_name = $session_object->customer_details->name ;

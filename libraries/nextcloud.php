@@ -1,10 +1,10 @@
 <?php
 
 class nextcloud {
-    private $hostname;
-    private $username;
-    private $password;
-    private $debug = false; //options: web console log false
+    private string $hostname;
+    private string $username;
+    private string $password;
+    private string|bool $debug = false; //options: web console log false
 
     /**
      * class constructor to get variables set only.
