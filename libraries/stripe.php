@@ -54,6 +54,11 @@ class stripe {
         );
 
         $product_object = $this->curl_command('products', $data);
+
+        $this->debug("Creating product:");
+        $this->debug($data);
+        $this->debug($product_object);
+
         return $product_object;
     }
 
@@ -66,7 +71,7 @@ class stripe {
     public function query_product(string $product_id) {
 
         $product_object = $this->curl_command('products/' . $product_id);
-
+        $this->debug($product_object);
         return $product_object;
     }
 
@@ -88,6 +93,25 @@ class stripe {
         $price_object = $this->curl_command('prices', $data);
 
         return $price_object;
+    }
+
+    /**
+     * Queries a Stripe price by its ID.
+     *
+     * @param string $price_id
+     * @param type $active_only return false in case the price retrieved is not active
+     * @return bool
+     */
+    public function query_price(string $price_id, $active_only = true) {
+
+        $price_object = $this->curl_command('prices/xxx' . $price_id);
+        $this->debug($price_object);
+
+        if ($active_only && $price_object->active == false) {
+            return false;
+        } else {
+            return $price_object;
+        }
     }
 
     /**
@@ -242,7 +266,7 @@ class stripe {
      * @return string
      * @throws Exception
      */
-    private function debug(string $info) {
+    private function debug($info) {
         // check where debug was called
         $trace = debug_backtrace();
         $source = "{$trace[1]['function']}";

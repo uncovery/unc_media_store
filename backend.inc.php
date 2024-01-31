@@ -11,10 +11,11 @@ if (!defined('WPINC')) {
  * @return string The generated HTML table.
  */
 function list_files(){
-    global $STRP;
+    global $STRP, $UMS;
     $files = read_db();
 
     $out = "<table class='ums_admin_table'>";
+
     $out .= "<tr>
         <th>ID</th>
         <th>Full Path</th>
@@ -22,17 +23,24 @@ function list_files(){
         <th>Start</th>
         <th>End</th>
         <th>Size</th>
-        <th>Stripe Product</th>
+        <th>Stripe</th>
         <th>Retention</th>
     </tr>\n";
 
     foreach ($files as $F) {
         $thumb_url =  $F->thumbnail_url;
         $stripe_url = $STRP->stripe_url();
-        $url_html = '';
+        $produtcs_url_html = '';
         if ($F->stripe_product_id != '') {
-            $url =  $stripe_url . "products/$F->stripe_product_id";
-            $url_html = "<a target=\"_blank\" href=\"$url\">Click here</a>";
+            $products_url =  $stripe_url . "products/$F->stripe_product_id";
+            $produtcs_url_html = "<a target=\"_blank\" href=\"$products_url\">Product</a>";
+        }
+
+        // add URL to prices
+        $prices_url_html = '';
+        if ($F->stripe_price_id != '') {
+            $prices_url =  $stripe_url . "prices/$F->stripe_product_id";
+            $prices_url_html = "<br><a target=\"_blank\" href=\"$prices_url\">Price</a>";
         }
 
         $del_date = file_retention_days($F->start_date);
@@ -44,7 +52,7 @@ function list_files(){
             <td>$F->start_date $F->start_time</td>
             <td>$F->end_time</td>
             <td>$F->size</td>
-            <td>$url_html</td>
+            <td>$produtcs_url_html $prices_url_html</td>
             <td>$del_date days</td>
         </tr>\n";
     }
@@ -63,11 +71,16 @@ function list_files(){
 function list_sales() {
     global $UMS;
 
+    $mode_field = '';
+    if ($UMS['debug_mode'] == 'on') {
+        $mode_field = '<th>Mode</th>';
+    }
+
     $out = "<h2> List of Sales </h2>
         <table class='ums_admin_table'>
         <tr>
             <th>Date</th>
-            <th>Mode</th>
+            $mode_field
             <th>File</th>
             <th>ID</th>
             <th>Customer Name</th>
@@ -79,15 +92,20 @@ function list_sales() {
     $data = data_get_sales();
     foreach ($data as $D) {
         $link = "No sales concluded";
+        $mode_line = '';
         if (strlen($D->nextcloud_link) > 1) {
             $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
         } else if ($UMS['debug_mode'] == 'off') {
-			continue;
+            continue;
 	}
+
+        if ($UMS['debug_mode'] == 'on') {
+            $mode_line = "<td>$D->mode</td>";
+        }
 
         $out .= "<tr>
             <td>$D->sales_time</td>
-            <td>$D->mode</td>
+            $mode_line
             <td>$D->full_path</td>
             <td>$D->file_id</td>
             <td>$D->fullname</td>

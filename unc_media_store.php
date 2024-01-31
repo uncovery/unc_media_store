@@ -18,6 +18,7 @@ if (!defined('WPINC')) {
 }
 global $UMS, $NC, $STRP;
 $UMS['debug'] = false;
+$UMS['debug_info'] = array();
 $UMS['start_time'] = microtime(true);
 
 require_once( plugin_dir_path( __FILE__ ) . "config.inc.php");
@@ -25,8 +26,8 @@ require_once( plugin_dir_path( __FILE__ ) . "backend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "settings.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "frontend.inc.php");
 require_once( plugin_dir_path( __FILE__ ) . "data.inc.php");
-require_once( plugin_dir_path( __FILE__ ) . "libraries\stripe.inc.php");
-require_once( plugin_dir_path( __FILE__ ) . "libraries\nextcloud.php");
+require_once( plugin_dir_path( __FILE__ ) . "libraries/stripe.php");
+require_once( plugin_dir_path( __FILE__ ) . "libraries/nextcloud.php");
 
 // actions on activating and deactivating the plugin
 register_activation_hook( __FILE__, 'ums\plugin_activate');

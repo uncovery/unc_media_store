@@ -154,7 +154,7 @@ function recording_details($D) {
             <b>File name:</b> $D->file_name<br>
             <b>Recording time:</b> $short_start_time until $short_end_time<br>
             <b>File Size:</b> $D->size<br>
-            <b>Price: </b> 500.- HKD<br>
+            <b>Price: </b> $costs_video.- HKD<br>
             You will receive a download link via email after payment.
             The link will be active for 1 month.<br>
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
@@ -190,35 +190,96 @@ function execute_purchase() {
 
     $check_honeypot = (is_null($special_field) || $special_field == '');
 
-    $purchase_type = filter_input(INPUT_POST, 'buynow_video', FILTER_SANITIZE_NUMBER_INT);
+    // $purchase_type = filter_input(INPUT_POST, 'buynow_video', FILTER_SANITIZE_NUMBER_INT);
 
     if ($check_honeypot && intval($purchase_file_id) > 0) {
         // let's get the product ID from the DB
         $P = data_fetch_one_recording($purchase_file_id);
 
-        // first create the stripe product
-        if ($P->stripe_product_id == '') {
-            $product_object = $STRP->create_product($P->file_name, $P->description, $UMS['statement_descriptor'], array($P->thumbnail_url));
-            $product_id = $product_object->id;
-        } else {
-            $product_id = $P->stripe_product_id;
-        }
-        // second create the stripe price object
-        if ($P->stripe_price_id == '') {
-            $price_object = $STRP->create_price($product_id, $UMS['media_price'], $UMS['currency']);
-            $price_id = $price_object->id;
-        } else {
-            $price_id = $P->stripe_price_id;
-        }
-        // lastly let's create the stripe session, that is always new
+        // first create the stripe product if there is no existing one
+        $product_id = sales_create_product($P);
+
+        $price_id = sales_create_price($P, $product_id);
+
+        // we send people back to the same current page
         $url = home_url($wp->request);
-        $session = $this->create_session($url, $price_id, 1);
+        // lastly let's create the stripe session, that is always new
+        $session = $STRP->create_session($url, $price_id, 1);
 
         data_prime_sales_session($purchase_file_id, $session->id, $product_id, $price_id);
 
         // now send the user to the payment page
         wp_redirect($session->url);
     }
+}
+
+/**
+ * Create a product if either the one in the database is not available, not active or was created in the wrong mode
+ *
+ * @global \ums\type $UMS
+ * @global type $STRP
+ * @param type $P
+ * @return type
+ */
+function sales_create_product($P){
+    global $UMS, $STRP;
+    $create_product = false;
+
+    if ($P->stripe_product_id == '') {
+        $create_product = true;
+    } else {
+        $product_id = $P->stripe_product_id;
+        $product_object = $STRP->query_product($product_id);
+        if (
+            ($product_object->active == false) ||
+            ($product_object->livemode == false && $UMS['stripe_mode'] == 'live') ||
+            ($product_object->livemode == true && $UMS['stripe_mode'] == 'test')) {
+            $create_product = true;
+        }
+    }
+
+    if ($create_product) {
+        $product_object = $STRP->create_product($P->file_name, $P->description, $UMS['statement_descriptor'], array($P->thumbnail_url));
+        $product_id = $product_object->id;
+    } else {
+        $product_id = $P->stripe_product_id;
+    }
+    return $product_id;
+}
+
+/**
+ * Create a Price for a product if either the one in the database is not available, not active or was created in the wrong mode
+ *
+ * @global \ums\type $UMS
+ * @global \ums\type $STRP
+ * @param type $P
+ * @param type $product_id
+ * @return type
+ */
+function sales_create_price($P, $product_id) {
+    global $UMS, $STRP;
+    $create_price = false;
+
+    if ($P->stripe_price_id == '') {
+        $create_price = true;
+    } else {
+        $price_id = $P->stripe_price_id;
+        $price_object = $STRP->query_price($price_id);
+        if (
+            ($price_object->active == false) ||
+            ($price_object->livemode == false && $UMS['stripe_mode'] == 'live') ||
+            ($price_object->livemode == true && $UMS['stripe_mode'] == 'test')) {
+            $create_price = true;
+        }
+    }
+
+    if ($create_price) {
+        $price_object = $STRP->create_price($product_id, $UMS['media_price'], $UMS['currency']);
+        $price_id = $price_object->id;
+    } else {
+        $price_id = $P->stripe_product_id;
+    }
+    return $price_id;
 }
 
 
@@ -235,7 +296,7 @@ function show_sales_result($session_id) {
     global $UMS, $NC, $STRP;
     // get the sesson data
 
-    $session_object = $this->get_session_data($session_id);
+    $session_object = $STRP->get_session_data($session_id);
 
     $user_email = $session_object->customer_details->email;
     $user_name = $session_object->customer_details->name ;

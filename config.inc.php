@@ -97,13 +97,13 @@ $UMS['user_settings'] = array(
         'validator' => array('relative_date_time' => true),
     ),
     'media_price' => array(
-        'help' => 'The price for one video file to download. Needs to be in CENTS!',
+        'help' => 'The price for one video file to download. Needs to be in CENTS! 500 would be 5$',
         'default' => 500,
         'type' => 'text',
         'title' => 'Video Price',
     ),
     'audio_price' => array(
-        'help' => 'The price for one Audio file to download. Needs to be in CENTS!',
+        'help' => 'The price for one Audio file to download. Needs to be in CENTS! 500 would be 5$',
         'default' => 300,
         'type' => 'text',
         'title' => 'Audio Price',

@@ -283,7 +283,7 @@ class nextcloud {
      * @return string
      * @throws Exception
      */
-    private function debug(string $info) {
+    private function debug($info) {
         // check where debug was called
         $trace = debug_backtrace();
         $source = "{$trace[1]['function']}";
