@@ -54,11 +54,12 @@ function data_db_create() {
         expiry date DEFAULT '0000-00-00' NOT NULL,
         sales_time datetime DEFAULT NOW() NOT NULL,
         mode varchar(10) DEFAULT '' NOT NULL,
+        price DECIMAL(13,2) DEFAULT 0 NOT NULL
         UNIQUE KEY `id` (`id`)
     ) $charset_collate;";
     dbDelta($sql_sales);
 
-    add_option( "ums_media_store_db_version", "3" );
+    add_option( "ums_media_store_db_version", "4" );
 }
 
 /**
@@ -257,12 +258,12 @@ function data_get_sales() {
 
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
-    
+
     $filter = '';
     if ($UMS['stripe_mode'] == 'live') {
         $filter = "WHERE mode LIKE 'live'";
     }
-    
+
     $D = $wpdb->get_results(
         "SELECT * FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
