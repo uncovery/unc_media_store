@@ -314,3 +314,30 @@ function data_file_has_active_nextcloud_share($file_path) {
     }
     return false;
 }
+
+
+/**
+ * remove files not on the nextcloud instance from the database.
+ *
+ * @global \ums\type $wpdb
+ * @param type $old_timestamps
+ * @return type
+ */
+function data_clean_db($old_timestamps) {
+    global $wpdb;
+
+    $deleted = 0;
+    foreach ($old_timestamps as $time_stamp) {
+        $deleted_files = $wpdb->update(
+            $wpdb->prefix . "ums_files",
+            array('expired' => 'NOW()'), // field => value to update
+            array('verified' => $time_stamp),  // field to match
+            array('%s',), // string format of timestamp
+        );
+        if ($deleted_files) {
+            $deleted += $deleted_files;
+        }
+    }
+
+    return $deleted;
+}

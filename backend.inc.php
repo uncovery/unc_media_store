@@ -166,7 +166,7 @@ function read_all_files() {
     }
 
     // remove files not on the nextcloud instance from the database.
-    $missing = clean_db($old_timestamps);
+    $missing = data_clean_db($old_timestamps);
 
     $result = "\nFiles new on nextcloud, added to DB: $new_file<br>
     Files missing on nextcloud, removed from DB: $missing<br>
@@ -175,32 +175,6 @@ function read_all_files() {
 
     return $result;
 }
-
-/**
- * remove files not on the nextcloud instance from the database.
- *
- * @global \ums\type $wpdb
- * @param type $old_timestamps
- * @return type
- */
-function clean_db($old_timestamps) {
-    global $wpdb;
-
-    $deleted = 0;
-    foreach ($old_timestamps as $time_stamp) {
-        $deleted_files = $wpdb->delete(
-            $wpdb->prefix . "ums_files",
-            array('verified' => $time_stamp),  // field to check
-            array('%s',), // string format of timestamp
-        );
-        if ($deleted_files) {
-            $deleted += $deleted_files;
-        }
-    }
-
-    return $deleted;
-}
-
 
 /**
  * Process one individual file
@@ -257,7 +231,7 @@ function process_single_file($F, $db_files, $time_stamp) {
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
-        // remove old files
+        // remove old files frmo nextcloud
         $NC->delete_file($UMS['nextcloud_folder'] . $file_path);
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
