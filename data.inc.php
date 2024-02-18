@@ -37,6 +37,7 @@ function data_db_create() {
         stripe_price_id varchar(256) DEFAULT '' NOT NULL,
         verified datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
         file_type varchar(64) DEFAULT 'video/mp4' NOT NULL,
+        expired datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
         UNIQUE KEY `id` (`id`),
         UNIQUE KEY `full_path` (`full_path`),
         UNIQUE KEY `start_date` (`start_date`,`full_path`)
@@ -59,7 +60,7 @@ function data_db_create() {
     ) $charset_collate;";
     dbDelta($sql_sales);
 
-    add_option( "ums_media_store_db_version", "4" );
+    add_option( "ums_media_store_db_version", "5" );
 }
 
 /**
@@ -116,13 +117,18 @@ function data_fetch_dates($ums_db) {
  * @param string $date The date for which to fetch recordings.
  * @return array An array of recordings for the specified date.
  */
-function data_fetch_date_recordings($date) {
+function data_fetch_date_recordings($date, $expired = false) {
     global $wpdb;
 
     $recordings = array();
 
+    $exp_sql = '';
+    if (!$expired) {
+        $exp_sql = 'AND expired = 0000-00-00 00:00:00';
+    }
+
     $table = $wpdb->prefix . "ums_files";
-    $sql = "SELECT * FROM $table WHERE start_date = '$date' GROUP BY start_time ORDER BY start_time";
+    $sql = "SELECT * FROM $table WHERE start_date = '$date' $exp_sql GROUP BY start_time ORDER BY start_time";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
         $recordings[] = $D;
@@ -250,6 +256,9 @@ function data_get_file_from_session($session_id) {
 
 /**
  * Retrieves sales data from the database.
+ *
+ * potential issue: maybe this shows only sales that have a file attached?
+ * What happens if the file expires?
  *
  * @return array The sales data.
  */
