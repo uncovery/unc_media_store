@@ -4,7 +4,7 @@ class nextcloud {
     private string $hostname;
     private string $username;
     private string $password;
-    private string|bool $debug = false; //options: web console log false
+    private string $debug = 'off'; //options: web console log off
 
     /**
      * class constructor to get variables set only.
@@ -336,7 +336,7 @@ class nextcloud {
             case 'log':
                 error_log($text);
                 break;
-            case false:
+            case 'off':
                 return;
             default:
                 throw new Exception("Invalid debug format: $this->debug");
