@@ -310,8 +310,10 @@ function show_sales_result($session_id) {
 
     if ($payment_status == 'paid' && $status == 'complete') {
 
+        $website_name = get_bloginfo('name');
+        $website_email = get_bloginfo('admin_email');
         $headers_array = array(
-          'From: The Wanch<noreply@thewanch.hk>'
+          "From: $website_name<$website_email>"
         );
         $headers = implode( PHP_EOL, $headers_array);
 
