@@ -11,6 +11,11 @@ if (!defined('WPINC')) {
  */
 function show_interface() {
     global $UMS;
+    
+    // let's check if we are in debug mode, in that case we only let admin users see the interface
+    if ($UMS['stripe_mode'] == 'test' && !current_user_can('activate_plugins')) {
+        return "Sorry, this function is down for maintenance. Please come back later.";
+    }
 
     debug_info($_POST, 'show_interface POST');
     debug_info($_GET, 'show_interface GET');
@@ -304,6 +309,13 @@ function show_sales_result($session_id) {
     $status = $session_object->status; // complete
 
     if ($payment_status == 'paid' && $status == 'complete') {
+
+        $headers = array(
+          'From: The Wanch<noreply@thewanch.hk>'
+        );
+        $headers = implode( PHP_EOL, $headers );
+
+
         $file_path = data_get_file_from_session($session_id);
 
         // set the date in the future when the file shall expire
@@ -324,7 +336,7 @@ function show_sales_result($session_id) {
 
         $out = str_replace($searches, $replacements, $config_text);
 
-        wp_mail($user_email, "Your Media Purchase", $out);
+        wp_mail($user_email, "Your Media Purchase", $out, $headers);
 
         $test_warning = '';
         if ($UMS['stripe_mode'] == 'test') {
@@ -342,7 +354,7 @@ function show_sales_result($session_id) {
             File Share link will expire: $expiry<br>
         ";
 
-        wp_mail($UMS['success_admin_email'], "Media File Sales report", $message);
+        wp_mail($UMS['success_admin_email'], "Media File Sales report", $message, $headers);
     } else {
         $out = "There was an issue with the transaction. Please contact us if you have trouble.";
     }
