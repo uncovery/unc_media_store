@@ -310,10 +310,10 @@ function show_sales_result($session_id) {
 
     if ($payment_status == 'paid' && $status == 'complete') {
 
-        $headers = array(
+        $headers_array = array(
           'From: The Wanch<noreply@thewanch.hk>'
         );
-        $headers = implode( PHP_EOL, $headers );
+        $headers = implode( PHP_EOL, $headers_array);
 
 
         $file_path = data_get_file_from_session($session_id);
