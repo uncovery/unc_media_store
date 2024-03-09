@@ -325,6 +325,11 @@ function show_sales_result($session_id) {
         $expiry = date_format($date_obj, 'Y-m-d');
 
         $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
+        
+        if (strlen($share_url) < 10) {
+            $share_url = "Sorry, there was an error creating the share URL. An admin will contact you as soon 
+                as possible and share the file with you. Thanks for your patience!";
+        }
 
         data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
 
