@@ -17,7 +17,7 @@ if (!defined('WPINC')) {
     die();
 }
 global $UMS, $NC, $STRP;
-$UMS['debug'] = false;
+$UMS['debug'] = 'off';
 $UMS['debug_info'] = array();
 $UMS['start_time'] = microtime(true);
 
@@ -49,10 +49,9 @@ foreach ($UMS['user_settings'] as $setting => $D) {
 }
 
 // prepare the nextcloud connection
-$lib_debug = false;
+$lib_debug = 'off';
 if ($UMS['debug'] == 'on') {
     $lib_debug = 'web';
-
 }
 
 $NC = new \nextcloud(
