@@ -286,7 +286,7 @@ class stripe {
             case 'log':
                 error_log($text);
                 break;
-            case false:
+            case 'off':
                 return;
             default:
                 throw new Exception("Invalid debug format: $this->debug");
