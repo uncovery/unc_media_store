@@ -316,17 +316,12 @@ function show_sales_result($session_id) {
           "From: $website_name<$website_email>"
         );
         $headers = implode( PHP_EOL, $headers_array);
-
-
         $file_path = data_get_file_from_session($session_id);
 
-        // set the date in the future when the file shall expire
-        $date_obj = date_create("+" . $UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
-        $expiry = date_format($date_obj, 'Y-m-d');
-
+        $expiry = calculate_share_expiry();
         $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
         
-        if (strlen($share_url) < 10) {
+        if (!$share_url || strlen($share_url) < 10) {
             $share_url = "Sorry, there was an error creating the share URL. An admin will contact you as soon 
                 as possible and share the file with you. Thanks for your patience!";
         }
@@ -371,4 +366,12 @@ function show_sales_result($session_id) {
     }
 
     return $out;
+}
+
+function calculate_share_expiry() {
+    global $UMS; 
+    // set the date in the future when the file shall expire
+    $date_obj = date_create("+" . $UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
+    $expiry = date_format($date_obj, 'Y-m-d');
+    return $expiry;
 }

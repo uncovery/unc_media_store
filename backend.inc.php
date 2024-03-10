@@ -47,7 +47,7 @@ function list_files(){
 
         $out .= "<tr>
             <td>$F->id</td>
-            <td>$F->full_path</td>
+            <td>$F->file_name</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
             <td>$F->start_date $F->start_time</td>
             <td>$F->end_time</td>
@@ -70,6 +70,16 @@ function list_files(){
  */
 function list_sales() {
     global $UMS;
+    
+    // check if a link creation was requested
+    $create_link = filter_input(INPUT_POST, 'create_link', FILTER_SANITIZE_ADD_SLASHES);
+    $link_id = filter_input(INPUT_POST, 'sales_id', FILTER_SANITIZE_NUMBER_INT);
+    if ($create_link && is_int(intval($link_id))) {
+        $check = sales_create_link($link_id);
+        if (!$check) {
+            echo "ERROR: There was a problem creating the link. Please check the logfile for details.";
+        }
+    }
 
     $mode_field = '';
     if ($UMS['debug_mode'] == 'on') {
@@ -91,22 +101,34 @@ function list_sales() {
 
     $data = data_get_sales();
     foreach ($data as $D) {
-        $link = "No sales concluded";
+
         $mode_line = '';
         if (strlen($D->nextcloud_link) > 1) {
             $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
-        } else if ($UMS['debug_mode'] == 'off') {
-            continue;
+        } else if (!data_get_file_id_from_sales_id($D->sales_id)) {
+            // file has expired
+            $link = "No link available";
+        } else {
+            $link ="<form style=\"margin:5px;\" method=\"POST\">
+                    <div>
+                        <input name=\"sales_id\" type=\"hidden\" value=\"$D->sales_id\">
+                        <input name=\"create_link\" type=\"submit\" value=\"Create Link\">
+                    </div>
+                </form>\n";
+        }
+
+        if ($UMS['debug_mode'] == 'off') {
+            // continue;
 	}
 
         if ($UMS['debug_mode'] == 'on') {
             $mode_line = "<td>$D->mode</td>";
         }
-
+        
         $out .= "<tr>
             <td>$D->sales_time</td>
             $mode_line
-            <td>$D->full_path</td>
+            <td>$D->file_name</td>
             <td>$D->file_id</td>
             <td>$D->fullname</td>
             <td>$D->email</td>
@@ -351,4 +373,19 @@ function file_retention_days(string $date) {
     $now = new \DateTime();
     $interval = $datetime->diff($now);
     return $interval->days;
+}
+
+function sales_create_link($sales_id) {
+    global $UMS, $NC;
+    
+    $file_path = data_get_file_path_from_sales_id($sales_id);
+    $expiry = calculate_share_expiry();
+    $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
+    if (!$share_url) {
+        return false;
+    }
+    
+    data_update_nc_share($sales_id, $share_url, $expiry);
+    
+    return true;
 }

@@ -229,6 +229,38 @@ function data_finalize_sales_session($session_id, $username, $email, $nc_link, $
 }
 
 /**
+ * Give a new link to an existing sale
+ *
+ * @param string $session_id The session ID of the sales session.
+ * @param string $username The username associated with the sales session.
+ * @param string $email The email associated with the sales session.
+ * @param string $nc_link The NextCloud link associated with the sales session.
+ * @param string $expiry The expiry date of the sales session.
+ * @return void
+ */
+function data_update_nc_share($sales_id, $nc_link, $expiry) {
+    global $wpdb;
+
+    $wpdb->update(
+        $wpdb->prefix . "ums_sales",
+        array(
+            'nextcloud_link' => $nc_link,
+            'expiry' => $expiry,
+        ),
+        array(
+            'id' => $sales_id,
+        ),
+        array(
+            '%s',
+            '%s',
+        ),
+        array(
+            '%s',
+        ),
+    );
+}
+
+/**
  * Retrieves the file path associated with a given session ID.
  *
  * @param string $session_id The session ID to retrieve the file path for.
@@ -273,13 +305,11 @@ function data_get_sales() {
         $filter = "WHERE mode LIKE 'live'";
     }
 
-    $D = $wpdb->get_results(
-        "SELECT * FROM $sales_table
+    $sql = "SELECT *, $sales_table.id as sales_id FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
         $filter
-        ORDER BY sales_time DESC;",
-    );
-
+        ORDER BY sales_time DESC;";
+    $D = $wpdb->get_results($sql);
     return $D;
 }
 
@@ -303,12 +333,10 @@ function data_file_has_active_nextcloud_share($file_path) {
 
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
-    $D = $wpdb->get_results($wpdb->prepare(
-        "SELECT nextcloud_link FROM $sales_table
+    $sql = "SELECT nextcloud_link FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
-        WHERE $files_table.full_path = '%s';",
-        $file_path
-    ), ARRAY_A);
+        WHERE $files_table.full_path = '%s';";
+    $D = $wpdb->get_results($wpdb->prepare($sql , $file_path), ARRAY_A);
     if (isset($D[0]['nextcloud_link']) && $D[0]['nextcloud_link'] <> '') {
         return true;
     }
@@ -340,4 +368,42 @@ function data_clean_db($old_timestamps) {
     }
 
     return $deleted;
+}
+
+function data_get_file_id_from_sales_id($sales_id) {
+    global $wpdb;
+    
+    $files_table = $wpdb->prefix . "ums_files";
+    $sales_table = $wpdb->prefix . "ums_sales";    
+    
+    $sql = "SELECT $files_table.id as file_id FROM $sales_table
+        LEFT JOIN $files_table 
+        ON $sales_table.file_id=$files_table.id 
+        WHERE $sales_table.id=%s;"; 
+    $D = $wpdb->get_results($wpdb->prepare($sql , $sales_id), ARRAY_A);
+    
+    if (count($D) == 0) {
+        return false;
+    } else {
+        return $D[0]['file_id'];
+    }
+}
+
+function data_get_file_path_from_sales_id($sales_id) {
+    global $wpdb;
+    
+    $files_table = $wpdb->prefix . "ums_files";
+    $sales_table = $wpdb->prefix . "ums_sales";    
+    
+    $sql = "SELECT full_path FROM $sales_table
+        LEFT JOIN $files_table 
+        ON $sales_table.file_id=$files_table.id 
+        WHERE $sales_table.id=%s;"; 
+    $D = $wpdb->get_results($wpdb->prepare($sql , $sales_id), ARRAY_A);
+    
+    if (count($D) == 0) {
+        return false;
+    } else {
+        return $D[0]['full_path'];
+    }
 }
