@@ -70,7 +70,7 @@ function list_files(){
  */
 function list_sales() {
     global $UMS;
-    
+
     // check if a link creation was requested
     $create_link = filter_input(INPUT_POST, 'create_link', FILTER_SANITIZE_ADD_SLASHES);
     $link_id = filter_input(INPUT_POST, 'sales_id', FILTER_SANITIZE_NUMBER_INT);
@@ -124,7 +124,7 @@ function list_sales() {
         if ($UMS['debug_mode'] == 'on') {
             $mode_line = "<td>$D->mode</td>";
         }
-        
+
         $out .= "<tr>
             <td>$D->sales_time</td>
             $mode_line
@@ -253,10 +253,13 @@ function process_single_file($F, $db_files, $time_stamp) {
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
-        // remove old files frmo nextcloud
+        // remove old files from nextcloud
         $NC->delete_file($UMS['nextcloud_folder'] . $file_path);
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
+        if ($UMS['nextcloud_empty_trash'] == 'true') {
+            $NC->empty_trash();
+        }
     } else if (!isset($db_files[$file_path])) {
         // add new files
         $description = "Recording from $start_date $start_time until $end_time";
@@ -377,15 +380,15 @@ function file_retention_days(string $date) {
 
 function sales_create_link($sales_id) {
     global $UMS, $NC;
-    
+
     $file_path = data_get_file_path_from_sales_id($sales_id);
     $expiry = calculate_share_expiry();
     $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
     if (!$share_url) {
         return false;
     }
-    
+
     data_update_nc_share($sales_id, $share_url, $expiry);
-    
+
     return true;
 }

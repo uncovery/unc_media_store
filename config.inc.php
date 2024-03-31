@@ -89,6 +89,13 @@ $UMS['user_settings'] = array(
         'title' => 'Nextcloud Share Expiry',
         'validator' => array('relative_date_time' => true),
     ),
+    'nextcloud_empty_trash' => array(
+        'help' => 'Shall we always empty the trashbin?',
+        'default' => array('false'),
+        'options' => array('true' => 'always empty', 'false' => 'never empty'), // , 'image/jpeg' => 'image/jpeg'
+        'type' => 'multiple',
+        'title' => 'Nextcloud Trashbin',
+    ),
     'nextcloud_file_cleanup' => array(
         'help' => 'After how much time should file be deleted from Nextcloud? See the "Relative formats" in the <a href="https://www.php.net/manual/en/datetime.formats.php">PHP Manual</a> for details. Results in a date only, not time.',
         'default' => '1 month',
