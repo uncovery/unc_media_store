@@ -4,7 +4,7 @@ class nextcloud {
     private string $hostname;
     private string $username;
     private string $password;
-    private string $debug = 'off'; //options: web console log off
+    private string|bool $debug = false; //options: web console log false
 
     /**
      * class constructor to get variables set only.
@@ -26,7 +26,7 @@ class nextcloud {
      *
      * @param string $folder
      * @param int $depth
-     * @return type
+     * @return objext
      * @throws Exception
      */
     public function read_folder(string $folder, int $depth) {
@@ -111,6 +111,18 @@ class nextcloud {
     }
 
     /**
+     * emptying the trashbin for the current user
+     *
+     * @return type
+     */
+    public function empty_trash() {
+        $url_file = "remote.php/dav/trashbin/$this->username/trash";
+        $this->debug("emptying trashbin for the current user");
+        $output = $this->nc_curl($url_file, array(CURLOPT_CUSTOMREQUEST => "DELETE"));
+        return $output;
+    }
+
+    /**
      * create a folder on a next cloud share
      *
      * @param string $target_folder
@@ -125,7 +137,7 @@ class nextcloud {
 
         if ($check) {
             // folder exists
-            return;
+            return true;
         }
 
         // first, we create the folder
@@ -186,6 +198,7 @@ class nextcloud {
             if ($fp) {
                 fwrite($fp, $output);
                 fclose($fp);
+                return true;
             } else {
                 throw new Exception("Error creating file: $target!");
             }
@@ -202,7 +215,6 @@ class nextcloud {
      * @return type
      */
     public function upload_file(string $target_path, string $file_path) {
-
         $fixed_path = str_replace( ' ', '%20', trim($target_path));
         $this->debug("Uploading file from path $file_path to $fixed_path");
         $url = "remote.php/dav/files/$this->username/$fixed_path";
@@ -259,8 +271,8 @@ class nextcloud {
             error_log("ERROR CREATING NC Share: $e");
             error_log("ERROR CREATING NC Share. XML: $xml");
             return false;
-        }   
-        
+        }
+
         $this->debug('create_share output conv:');
         $this->debug($json_array);
 
@@ -343,7 +355,7 @@ class nextcloud {
             case 'log':
                 error_log($text);
                 break;
-            case 'off':
+            case false:
                 return;
             default:
                 throw new Exception("Invalid debug format: $this->debug");
