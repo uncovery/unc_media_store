@@ -90,7 +90,7 @@ $UMS['user_settings'] = array(
         'validator' => array('relative_date_time' => true),
     ),
     'nextcloud_empty_trash' => array(
-        'help' => 'Shall we always empty the trashbin?',
+        'help' => 'Shall we always empty the trashbin? The trashbin will be emptied after a file expired. This will delete ALL files in the trashbin.',
         'default' => array('false'),
         'options' => array('true' => 'always empty', 'false' => 'never empty'), // , 'image/jpeg' => 'image/jpeg'
         'type' => 'multiple',
