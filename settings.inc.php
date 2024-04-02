@@ -71,7 +71,7 @@ function admin_init() {
             $callback = 'ums\setting_multiple_render';
             $args['options'] = $D['options'];
         } else if ($D['type'] == 'wp_page'){
-            $callback = 'ums\setting_pages_render';
+            $callback = 'ums\setting_pages_dropdown_render';
         }
 
         if (isset($D['validator'])) {
@@ -281,12 +281,12 @@ function setting_multiple_render($A) {
 }
 
 /**
- * Renders a selection dropdown for setting pages.
+ * Renders a selection dropdown for choosing a wordpress page.
  *
  * @param array $A An array containing the setting, value, options, and default values.
  * @return void
  */
-function setting_pages_render($A) {
+function setting_pages_dropdown_render($A) {
 
     $out = "<select name=\"{$A['setting']}\">\n";
 
