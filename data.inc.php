@@ -124,7 +124,7 @@ function data_fetch_date_recordings($date, $expired = false) {
 
     $exp_sql = '';
     if (!$expired) {
-        $exp_sql = 'AND expired = 0000-00-00 00:00:00';
+        $exp_sql = "AND expired = '0000-00-00 00:00:00'";
     }
 
     $table = $wpdb->prefix . "ums_files";
@@ -372,16 +372,16 @@ function data_clean_db($old_timestamps) {
 
 function data_get_file_id_from_sales_id($sales_id) {
     global $wpdb;
-    
+
     $files_table = $wpdb->prefix . "ums_files";
-    $sales_table = $wpdb->prefix . "ums_sales";    
-    
+    $sales_table = $wpdb->prefix . "ums_sales";
+
     $sql = "SELECT $files_table.id as file_id FROM $sales_table
-        LEFT JOIN $files_table 
-        ON $sales_table.file_id=$files_table.id 
-        WHERE $sales_table.id=%s;"; 
+        LEFT JOIN $files_table
+        ON $sales_table.file_id=$files_table.id
+        WHERE $sales_table.id=%s;";
     $D = $wpdb->get_results($wpdb->prepare($sql , $sales_id), ARRAY_A);
-    
+
     if (count($D) == 0) {
         return false;
     } else {
@@ -391,16 +391,16 @@ function data_get_file_id_from_sales_id($sales_id) {
 
 function data_get_file_path_from_sales_id($sales_id) {
     global $wpdb;
-    
+
     $files_table = $wpdb->prefix . "ums_files";
-    $sales_table = $wpdb->prefix . "ums_sales";    
-    
+    $sales_table = $wpdb->prefix . "ums_sales";
+
     $sql = "SELECT full_path FROM $sales_table
-        LEFT JOIN $files_table 
-        ON $sales_table.file_id=$files_table.id 
-        WHERE $sales_table.id=%s;"; 
+        LEFT JOIN $files_table
+        ON $sales_table.file_id=$files_table.id
+        WHERE $sales_table.id=%s;";
     $D = $wpdb->get_results($wpdb->prepare($sql , $sales_id), ARRAY_A);
-    
+
     if (count($D) == 0) {
         return false;
     } else {
