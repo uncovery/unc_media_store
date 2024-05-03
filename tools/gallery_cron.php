@@ -219,7 +219,7 @@ function calculate_date_age(string $file_date) {
  * @return bool|array returns an array with the video length in hours and minutes or false if an error occurs
  */
 function get_video_length(string $file_path)  {
-    $command = 'ffmpeg -i "' . $file_path . '" 2>&1 | grep "Duration"';
+    $command = 'ffmpeg -hide_banner -i "' . $file_path . '" 2>&1 | grep "Duration"';
     $return = shell_exec($command);
 
     if (is_null($return)) {
@@ -259,7 +259,7 @@ function get_video_length(string $file_path)  {
  * @return float|false The volume of the video in decibels, or false if an error occurred.
  */
 function get_video_volume(string $file_path) {
-    $command = "ffmpeg -t 10 -i \"$file_path\" -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
+    $command = "ffmpeg -hide_banner -t 10 -i \"$file_path\" -af \"volumedetect\" -f null /dev/nullc 2>&1 | grep max_volume";
     $return = shell_exec($command);
 
     $pattern = "/max_volume: (.*) dB/m";
@@ -362,12 +362,12 @@ function create_audio(string $video_path) {
 
     if (!file_exists($m4a_path) && !file_exists($mp3_path)) {
         debug_info("extracting audio at $m4a_path");
-        $command = "ffmpeg -i $video_path -vn -acodec copy $video_path.m4a";
+        $command = "ffmpeg -hide_banner -i $video_path -vn -acodec copy $video_path.m4a";
         shell_exec($command);
     }
     if (file_exists($m4a_path) && !file_exists($mp3_path)) {
         debug_info("converting m4a to mp3 audio at $mp3_path");
-        $command = "ffmpeg -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
+        $command = "ffmpeg -hide_banner -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
         shell_exec($command);
         unlink($m4a_path);
     }
