@@ -109,12 +109,24 @@ $UMS['user_settings'] = array(
         'type' => 'text',
         'title' => 'Video Price',
     ),
-    'audio_price' => array(
-        'help' => 'The price for one Audio file to download. Needs to be in CENTS! 500 would be 5$',
-        'default' => 300,
+    'short_media_time' => array(
+        'help' => 'The number of minutes that a video has to be (or below) to qualify for a disocunt',
+        'default' => 60,
         'type' => 'text',
-        'title' => 'Audio Price',
+        'title' => 'Short Video length',
     ),
+    'short_media_discount' => array(
+        'help' => 'The cost reduction a video gets if it is shorter than the above time',
+        'default' => 200,
+        'type' => 'text',
+        'title' => 'Short Video discount',
+    ),
+//    'audio_price' => array(
+//        'help' => 'The price for one Audio file to download. Needs to be in CENTS! 500 would be 5$',
+//        'default' => 300,
+//        'type' => 'text',
+//        'title' => 'Audio Price',
+//    ),
     'currency' => array(
         'help' => 'What currency are you dealing with? This will be used in emails along with prices.',
         'default' => 'USD',

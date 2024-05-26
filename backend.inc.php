@@ -22,12 +22,18 @@ function list_files(){
         <th>Thumbnail</th>
         <th>Start</th>
         <th>End</th>
+        <th>Length</th>
         <th>Size</th>
         <th>Stripe</th>
+        <th>Price</th>
         <th>Retention</th>
     </tr>\n";
 
     foreach ($files as $F) {
+        // we skip expired files.
+        if ($F->expired <> '0000-00-00 00:00:00') {
+            continue;
+        }
         $thumb_url =  $F->thumbnail_url;
         $stripe_url = $STRP->stripe_url();
         $produtcs_url_html = '';
@@ -42,17 +48,34 @@ function list_files(){
             $prices_url =  $stripe_url . "prices/$F->stripe_product_id";
             $prices_url_html = "<br><a target=\"_blank\" href=\"$prices_url\">Price</a>";
         }
+        
+        if ($F->length == '00:00:00') {
+            $length = calculate_video_length($F->start_date, $F->start_time, $F->end_time);
+        } else {
+            $length = $F->length;
+        }
+        $short_length = substr($length, 0, 5);
+        $short_start = substr("$F->start_date $F->start_time", 0, 16);
+        $short_end = substr($F->end_time, 0, 5);
 
         $del_date = file_retention_days($F->start_date);
+        
+        if ($F->price == '0.00') {
+            $price = calculate_media_price($length) / 100;
+        } else {
+            $price = $F->price / 100;
+        }
 
         $out .= "<tr>
             <td>$F->id</td>
             <td>$F->file_name</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
-            <td>$F->start_date $F->start_time</td>
-            <td>$F->end_time</td>
+            <td>$short_start</td>
+            <td>$short_end</td>
+            <td>$short_length</td>
             <td>$F->size</td>
             <td>$produtcs_url_html $prices_url_html</td>
+            <td>$price {$UMS['currency']}</td>
             <td>$del_date days</td>
         </tr>\n";
     }
@@ -156,28 +179,22 @@ function read_all_files() {
     // Read all files from the nextcloud server
     $nc_files = $NC->read_folder('recording', $UMS['nextcloud_folder_depth']);
 
-    $files_filtered = $NC->filter_files($nc_files, $UMS['nextcloud_content_types']);
+    $nc_files_filtered = $NC->filter_files($nc_files, $UMS['nextcloud_content_types']);
 
     // cleanup expired share links
     data_cleanup_expired_links();
 
     // read already known files from the DB to compare
     $db_files = read_db();
-
+    
     // we check the time now and add the time to all found entries,
     // then delete the rest since those must have been removed from nextcloud
     $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
 
-    // let's get all the existing time stamps from the DB that are different from
-    // the one created above
-    $old_timestamps = array();
-    foreach ($db_files as $file) {
-        $old_timestamps[$file->verified] = $file->verified;
-    }
-
     $new_file = 0;
     $old_file = 0;
-    foreach ($files_filtered as $F) {
+    // go through the files that we have on nextcloud and set the "verified" field to now().
+    foreach ($nc_files_filtered as $F) {
         // process this file
         $check = process_single_file($F, $db_files, $time_stamp);
         if ($check == 'new') {
@@ -187,8 +204,8 @@ function read_all_files() {
         }
     }
 
-    // remove files not on the nextcloud instance from the database.
-    $missing = data_clean_db($old_timestamps);
+    // We now remove all files that do not have the new timestamp.
+    $missing = data_clean_db($time_stamp);
 
     $result = "\nFiles new on nextcloud, added to DB: $new_file<br>
     Files missing on nextcloud, removed from DB: $missing<br>
@@ -272,6 +289,7 @@ function process_single_file($F, $db_files, $time_stamp) {
                 'start_date' => $start_date,
                 'start_time' => $start_time,
                 'end_time' => $end_time,
+                'length' => calculate_video_length($start_date, $start_time, $end_time),
                 'size' => $file_size,
                 'verified' => $time_stamp,
                 'description' => $description,
@@ -349,6 +367,77 @@ function new_file_notification($D, $id) {
 
     wp_mail($UMS['new_file_admin_email'], "New video recorded: {$D['start_date']}, {$D['start_time']} until {$D['end_time']}", $email_body);
 }
+
+
+function calculate_media_price($video_length) {
+    global $UMS; 
+    
+    $base_price = $UMS['media_price'];
+    
+    $dt_video_length = new \DateTime($video_length);
+    $discount_time = \DateTime::createFromFormat('H:i:s', '00:00:00');
+    // Add the specified minutes
+    $discount_time->modify("+{$UMS['short_media_time']} minutes");
+
+    if ($dt_video_length < $discount_time) {
+        return $base_price - $UMS['short_media_discount'];
+    } else  {
+        return $base_price;
+    }
+}
+
+function calculate_video_length($start_date, $start_time, $end_time) {
+    $date_check = times_same_day_check($start_time, $end_time);
+    if (!$date_check) {
+        $end_date = add_day_to_date($start_date);
+    } else {
+        $end_date = $start_date;
+    }
+    
+    $date1 = new \DateTime("$start_date $start_time");
+    $date2 = new \DateTime("$end_date $end_time");
+
+    // Calculate the difference
+    $interval = $date1->diff($date2);
+
+    // Get the total hours and minutes
+    $hours = $interval->h;
+    $minutes = $interval->i;
+    $seconds = $interval->s;
+
+    // Format the result
+    $result = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+
+    return $result;
+}
+
+function times_same_day_check($start_time, $end_time) {
+    $dt_start = \DateTime::createFromFormat('H:i:s', $start_time);
+    $dt_end = \DateTime::createFromFormat('H:i:s', $end_time);
+
+    if ($dt_start === false || $dt_end === false) {
+        // Invalid time format
+        return "Invalid time format provided.";
+    }
+
+    if ($dt_start < $dt_end) {
+        return true;
+    } elseif ($dt_start > $dt_end) {
+        return false;
+    } 
+}
+
+function add_day_to_date($date) {
+    try {
+        $dateObj = new \DateTime($date);
+        $dateObj->modify('+1 day'); // Add one day
+        $resultDate = $dateObj->format('Y-m-d'); // Format the result
+        return $resultDate;
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
+
 
 /**
  * return true if a file is older than the set config timespan

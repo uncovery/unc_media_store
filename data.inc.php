@@ -31,6 +31,8 @@ function data_db_create() {
         start_date date DEFAULT '0000-00-00' NOT NULL,
         start_time time DEFAULT '00:00:00' NOT NULL,
         end_time time DEFAULT '00:00:00' NOT NULL,
+        length time DEFAULT '00:00:00' NOT NULL,
+        price DECIMAL(13,2) DEFAULT 0 NOT NULL,
         size varchar(64) NOT NULL,
         description varchar(256) DEFAULT '' NOT NULL,
         stripe_product_id varchar(256) DEFAULT '' NOT NULL,
@@ -59,8 +61,43 @@ function data_db_create() {
         UNIQUE KEY `id` (`id`)
     ) $charset_collate;";
     dbDelta($sql_sales);
+    
+    fix_data();
 
-    add_option( "ums_media_store_db_version", "5" );
+    add_option( "ums_media_store_db_version", "8" );
+}
+
+function fix_data() {
+    global $wpdb;
+    $files = read_db();
+    
+    foreach ($files as $F) {
+        $id = $F->id;
+        $update = false;
+        
+        if ($F->length == '00:00:00') {
+            $length = calculate_video_length($F->start_date, $F->start_time, $F->end_time);
+            $update = true;
+        } else {
+            $length = $F->length;
+        }
+        
+        if ($F->price == '0.00') {
+            $price = calculate_media_price($length);
+            $update = true;
+        } else {
+            $price = $F->price;
+        }
+        
+        if ($update) {
+            $wpdb->update( $wpdb->prefix . 'ums_files', 
+                    array('length' => $length, 'price' => $price), 
+                    array('id' => $id), 
+                    array('%s', '%s'), 
+                    '%d'
+            );
+        }
+    }
 }
 
 /**
@@ -351,21 +388,19 @@ function data_file_has_active_nextcloud_share($file_path) {
  * @param type $old_timestamps
  * @return type
  */
-function data_clean_db($old_timestamps) {
+function data_clean_db($current_timestamp) {
     global $wpdb;
 
-    $deleted = 0;
-    foreach ($old_timestamps as $time_stamp) {
-        $deleted_files = $wpdb->update(
-            $wpdb->prefix . "ums_files",
-            array('expired' => 'NOW()'), // field => value to update
-            array('verified' => $time_stamp),  // field to match
-            array('%s',), // string format of timestamp
-        );
-        if ($deleted_files) {
-            $deleted += $deleted_files;
-        }
-    }
+    debug_info("setting all files with not updated timestamp $current_timestamp to expired.", "data_clean_db");
+
+    $table = $wpdb->prefix . "ums_files";
+    $sql = "UPDATE `$table` SET `expired`=NOW() WHERE `verified`<> %s && `expired`='0000-00-00 00:00:00'";
+    $wpdb->get_results($wpdb->prepare($sql , $current_timestamp), ARRAY_A);
+ 
+    debug_info($sql, "data_clean_db");
+
+    $deleted = $wpdb->rows_affected;
+    debug_info("found $deleted files to expire", "data_clean_db");
 
     return $deleted;
 }

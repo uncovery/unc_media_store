@@ -150,7 +150,7 @@ function recording_details($D) {
     $short_start_time = substr($D->start_time, 0, 5);
     $short_end_time = substr($D->end_time, 0, 5);
 
-    $costs_video = $UMS['media_price'] / 100;
+    $costs_video = $D->price / 100;
     // $costs_audio = $UMS['audio_price'] / 100;
 
     $out = "
