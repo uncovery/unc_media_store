@@ -20,8 +20,10 @@
  */
 
 global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile, $error;
-$source = '/home/uncovery/Videos';
-$target = '/home/uncovery/Nextcloud/recording';
+$root_folder = '/home/uncovery';
+$source = $root_folder . '/Videos';
+$target = $root_folder . '/Nextcloud/recording';
+$logs = __FILE__ . '/logs';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
 $debug = false;
@@ -37,7 +39,7 @@ $valid_file_extensions = array('mp4');
 if ($log) {
     $date = new DateTime();
     $date_str = $date->format('Y-m-d');
-    $logfile = fopen("/home/scripts/logs/log_$date_str.txt", "a+") or die("Unable to open logifle!");
+    $logfile = fopen($logs . "/log_$date_str.txt", "a+") or die("Unable to open logifle!");
     fwrite($logfile, "Logfile start\n");
 }
 
@@ -115,8 +117,7 @@ function read_files() {
         }
 
         create_gallery($target_path);
-        create_audio($target_path);
-
+        // create_audio($target_path);
     }
 }
 
@@ -129,18 +130,18 @@ function check_volume_space() {
     $matches = false;
     $command = "df -h";
     $result = shell_exec($command);
-    $re = '/  (?<space>\d\d)% \/home/m';
+    $re = '/  (?<space>[\d]*)% \/home/m';
     preg_match_all($re, $result, $matches, PREG_SET_ORDER, 0);
     $check = intval($matches[0]['space']);
 
     if ($check > 80) {
         error_info("ERROR, SPACE USAGE ABOVE 80%");
     }
-    debug_info("$check% space free on device");
+    debug_info("$check% space used on device");
 }
 
 /**
- * let's delete old files, but not the audio
+ * let's delete old files, video and screenshot
  *
  * @param type $file_path
  * @return bool
@@ -152,7 +153,11 @@ function old_file_cleanup(string $file_path) {
     // echo var_export($age, true);
     if ($age->m >= 1) {
         error_info("WARNING File $file_path is old, deleting it!");
+        // deletes the video file
         trash_file($file_path);
+        // now delete the screenshot gallery
+        $image_path = str_replace('.mp4', '.jpg', $file_path);
+        trash_file($image_path);
         return false;
     }
     return true;
@@ -356,28 +361,28 @@ function create_gallery(string $video_path) {
  * @param string $video_path The path of the video file.
  * @return void
  */
-function create_audio(string $video_path) {
-    $m4a_path = "$video_path.m4a";
-    $mp3_path = "$video_path.mp3";
-
-    if (!file_exists($m4a_path) && !file_exists($mp3_path)) {
-        debug_info("extracting audio at $m4a_path");
-        $command = "ffmpeg -hide_banner -i $video_path -vn -acodec copy $video_path.m4a";
-        shell_exec($command);
-    }
-    if (file_exists($m4a_path) && !file_exists($mp3_path)) {
-        debug_info("converting m4a to mp3 audio at $mp3_path");
-        $command = "ffmpeg -hide_banner -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
-        shell_exec($command);
-        unlink($m4a_path);
-    }
-
-    // delete empty galleries and return
-    if (filesize($mp3_path) == 0) {
-        trash_file($mp3_path);
-        error_info("ERROR CREATING AUDIO FILE: $mp3_path filesize is null");
-    }
-}
+//function create_audio(string $video_path) {
+//    $m4a_path = "$video_path.m4a";
+//    $mp3_path = "$video_path.mp3";
+//
+//    if (!file_exists($m4a_path) && !file_exists($mp3_path)) {
+//        debug_info("extracting audio at $m4a_path");
+//        $command = "ffmpeg -hide_banner -i $video_path -vn -acodec copy $video_path.m4a";
+//        shell_exec($command);
+//    }
+//    if (file_exists($m4a_path) && !file_exists($mp3_path)) {
+//        debug_info("converting m4a to mp3 audio at $mp3_path");
+//        $command = "ffmpeg -hide_banner -i $video_path.m4a -codec:a libmp3lame -qscale:a 320k $video_path.mp3";
+//        shell_exec($command);
+//        unlink($m4a_path);
+//    }
+//
+//    // delete empty galleries and return
+//    if (filesize($mp3_path) == 0) {
+//        trash_file($mp3_path);
+//        error_info("ERROR CREATING AUDIO FILE: $mp3_path filesize is null");
+//    }
+//}
 
 
 /**
