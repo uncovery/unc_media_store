@@ -20,10 +20,10 @@
  */
 
 global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile, $error;
-$root_folder = '/home/uncovery';
-$source = $root_folder . '/Videos';
+$root_folder = '/mnt/d/';
+$source = $root_folder . '/Recordings';
 $target = $root_folder . '/Nextcloud/recording';
-$logs = __FILE__ . '/logs';
+$logs = __DIR__ . '/logs';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);
 $debug = false;
@@ -130,7 +130,7 @@ function check_volume_space() {
     $matches = false;
     $command = "df -h";
     $result = shell_exec($command);
-    $re = '/  (?<space>[\d]*)% \/home/m';
+    $re = '/  (?<space>[\d]*)% \/mnt\/d/m';
     preg_match_all($re, $result, $matches, PREG_SET_ORDER, 0);
     $check = intval($matches[0]['space']);
 
