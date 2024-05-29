@@ -11,7 +11,7 @@ if (!defined('WPINC')) {
  */
 function show_interface() {
     global $UMS;
-    
+
     // let's check if we are in debug mode, in that case we only let admin users see the interface
     if ($UMS['stripe_mode'] == 'test' && !current_user_can('activate_plugins')) {
         return "Sorry, this function is down for maintenance. Please come back later.";
@@ -65,6 +65,9 @@ function show_interface() {
     } else if (count($date_recordings) == 1) {
         $out .= "There is only one recording on $selected_date:<br>";
         $selected_file_id = $date_recordings[0]->id;
+    } else {
+        $out .= "No recordings found, all are expired";
+        debug_info(var_export($date_recordings, true), 'show_interface');
     }
 
     // now show the either only one recording or the one selected from the dropdown
@@ -320,9 +323,9 @@ function show_sales_result($session_id) {
 
         $expiry = calculate_share_expiry();
         $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
-        
+
         if (!$share_url || strlen($share_url) < 10) {
-            $share_url = "Sorry, there was an error creating the share URL. An admin will contact you as soon 
+            $share_url = "Sorry, there was an error creating the share URL. An admin will contact you as soon
                 as possible and share the file with you. Thanks for your patience!";
         }
 
@@ -369,7 +372,7 @@ function show_sales_result($session_id) {
 }
 
 function calculate_share_expiry() {
-    global $UMS; 
+    global $UMS;
     // set the date in the future when the file shall expire
     $date_obj = date_create("+" . $UMS['nextcloud_share_time'], new \DateTimeZone(wp_timezone_string()));
     $expiry = date_format($date_obj, 'Y-m-d');
