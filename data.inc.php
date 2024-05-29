@@ -61,7 +61,7 @@ function data_db_create() {
         UNIQUE KEY `id` (`id`)
     ) $charset_collate;";
     dbDelta($sql_sales);
-    
+
     fix_data();
 
     add_option( "ums_media_store_db_version", "8" );
@@ -70,30 +70,30 @@ function data_db_create() {
 function fix_data() {
     global $wpdb;
     $files = read_db();
-    
+
     foreach ($files as $F) {
         $id = $F->id;
         $update = false;
-        
+
         if ($F->length == '00:00:00') {
             $length = calculate_video_length($F->start_date, $F->start_time, $F->end_time);
             $update = true;
         } else {
             $length = $F->length;
         }
-        
+
         if ($F->price == '0.00') {
             $price = calculate_media_price($length);
             $update = true;
         } else {
             $price = $F->price;
         }
-        
+
         if ($update) {
-            $wpdb->update( $wpdb->prefix . 'ums_files', 
-                    array('length' => $length, 'price' => $price), 
-                    array('id' => $id), 
-                    array('%s', '%s'), 
+            $wpdb->update( $wpdb->prefix . 'ums_files',
+                    array('length' => $length, 'price' => $price),
+                    array('id' => $id),
+                    array('%s', '%s'),
                     '%d'
             );
         }
@@ -166,6 +166,9 @@ function data_fetch_date_recordings($date, $expired = false) {
 
     $table = $wpdb->prefix . "ums_files";
     $sql = "SELECT * FROM $table WHERE start_date = '$date' $exp_sql GROUP BY start_time ORDER BY start_time";
+
+    debug_info("Retrieving recordings for $date with SQL $sql", 'data_fetch_date_recordings');
+
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
         $recordings[] = $D;
@@ -396,7 +399,7 @@ function data_clean_db($current_timestamp) {
     $table = $wpdb->prefix . "ums_files";
     $sql = "UPDATE `$table` SET `expired`=NOW() WHERE `verified`<> %s && `expired`='0000-00-00 00:00:00'";
     $wpdb->get_results($wpdb->prepare($sql , $current_timestamp), ARRAY_A);
- 
+
     debug_info($sql, "data_clean_db");
 
     $deleted = $wpdb->rows_affected;
