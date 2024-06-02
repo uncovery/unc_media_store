@@ -32,7 +32,7 @@ function data_db_create() {
         start_time time DEFAULT '00:00:00' NOT NULL,
         end_time time DEFAULT '00:00:00' NOT NULL,
         length time DEFAULT '00:00:00' NOT NULL,
-        price DECIMAL(13,2) DEFAULT 0 NOT NULL,
+        price DECIMAL(13,0) DEFAULT 0 NOT NULL,
         size varchar(64) NOT NULL,
         description varchar(256) DEFAULT '' NOT NULL,
         stripe_product_id varchar(256) DEFAULT '' NOT NULL,
@@ -57,7 +57,7 @@ function data_db_create() {
         expiry date DEFAULT '0000-00-00' NOT NULL,
         sales_time datetime DEFAULT NOW() NOT NULL,
         mode varchar(10) DEFAULT '' NOT NULL,
-        price DECIMAL(13,2) DEFAULT 0 NOT NULL
+        price DECIMAL(13,0) DEFAULT 0 NOT NULL
         UNIQUE KEY `id` (`id`)
     ) $charset_collate;";
     dbDelta($sql_sales);
