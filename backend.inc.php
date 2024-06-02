@@ -49,22 +49,11 @@ function list_files(){
             $prices_url_html = "<br><a target=\"_blank\" href=\"$prices_url\">Price</a>";
         }
         
-        if ($F->length == '00:00:00') {
-            $length = calculate_video_length($F->start_date, $F->start_time, $F->end_time);
-        } else {
-            $length = $F->length;
-        }
-        $short_length = substr($length, 0, 5);
+        $short_length = substr($F->length, 0, 5);
         $short_start = substr("$F->start_date $F->start_time", 0, 16);
         $short_end = substr($F->end_time, 0, 5);
-
         $del_date = file_retention_days($F->start_date);
-        
-        if ($F->price == '0.00') {
-            $price = calculate_media_price($length) / 100;
-        } else {
-            $price = $F->price / 100;
-        }
+        $price = $F->price / 100;
 
         $out .= "<tr>
             <td>$F->id</td>
@@ -120,6 +109,7 @@ function list_sales() {
             <th>Customer email</th>
             <th>Share link</th>
             <th>Expiry</th>
+            <th>Price</th>
         </tr>\n";
 
     $data = data_get_sales();
@@ -147,6 +137,8 @@ function list_sales() {
         if ($UMS['debug_mode'] == 'on') {
             $mode_line = "<td>$D->mode</td>";
         }
+        
+        $price = $D->price / 100;
 
         $out .= "<tr>
             <td>$D->sales_time</td>
@@ -157,6 +149,7 @@ function list_sales() {
             <td>$D->email</td>
             <td>$link</td>
             <td>$D->expiry</td>
+            <td>$price</td>
         </tr>\n";
     }
 
@@ -280,6 +273,7 @@ function process_single_file($F, $db_files, $time_stamp) {
     } else if (!isset($db_files[$file_path])) {
         // add new files
         $description = "Recording from $start_date $start_time until $end_time";
+        $length = calculate_video_length($start_date, $start_time, $end_time);
         $db_data = array(
                 'file_name' => $filename,
                 'full_path' => $file_path,
@@ -289,10 +283,11 @@ function process_single_file($F, $db_files, $time_stamp) {
                 'start_date' => $start_date,
                 'start_time' => $start_time,
                 'end_time' => $end_time,
-                'length' => calculate_video_length($start_date, $start_time, $end_time),
+                'length' => $length,
                 'size' => $file_size,
                 'verified' => $time_stamp,
                 'description' => $description,
+                'price' => calculate_media_price($length),
         );
         $wpdb->insert(
             $wpdb->prefix . "ums_files",
