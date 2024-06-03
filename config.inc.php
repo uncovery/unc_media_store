@@ -103,23 +103,23 @@ $UMS['user_settings'] = array(
         'title' => 'Nextcloud File Expiry',
         'validator' => array('relative_date_time' => true),
     ),
-    'media_price' => array(
-        'help' => 'The price for one video file to download. Needs to be in CENTS! 500 would be 5$',
-        'default' => 500,
+    'media_base_price' => array(
+        'help' => 'The base price for one video to buy. Needs to be in CENTS! 500 would be 5$',
+        'default' => 100,
         'type' => 'text',
         'title' => 'Video Price',
     ),
-    'short_media_time' => array(
-        'help' => 'The number of minutes that a video has to be (or below) to qualify for a disocunt',
+    'multiplicator_time' => array(
+        'help' => 'The number of minutes that causes a video to become more expensive.',
         'default' => 60,
         'type' => 'text',
-        'title' => 'Short Video length',
+        'title' => 'Multiplicator Time',
     ),
-    'short_media_discount' => array(
-        'help' => 'The cost reduction a video gets if it is shorter than the above time',
+    'multiplicator_price' => array(
+        'help' => 'The added price when a video has a multiple of the above minutes. Needs to be in CENTS! 500 would be 5$',
         'default' => 200,
         'type' => 'text',
-        'title' => 'Short Video discount',
+        'title' => 'Multiplactor Price',
     ),
 //    'audio_price' => array(
 //        'help' => 'The price for one Audio file to download. Needs to be in CENTS! 500 would be 5$',

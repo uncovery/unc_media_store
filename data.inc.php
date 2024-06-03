@@ -82,21 +82,14 @@ function fix_data() {
             $length = $F->length;
         }
 
-        if ($F->price == '0.00') {
-            $price = calculate_media_price($length);
-            $update = true;
-        } else {
-            $price = $F->price;
-        }
 
-        if ($update) {
-            $wpdb->update( $wpdb->prefix . 'ums_files',
-                    array('length' => $length, 'price' => $price),
-                    array('id' => $id),
-                    array('%s', '%s'),
-                    '%d'
-            );
-        }
+        $price = calculate_media_price($length);
+        $wpdb->update( $wpdb->prefix . 'ums_files',
+            array('length' => $length, 'price' => $price),
+            array('id' => $id),
+            array('%s', '%s'),
+            '%d'
+        );
     }
 }
 
@@ -345,10 +338,11 @@ function data_get_sales() {
         $filter = "WHERE mode LIKE 'live'";
     }
 
-    $sql = "SELECT *, $sales_table.id as sales_id FROM $sales_table
+    $sql = "SELECT $sales_table.*, $sales_table.id as sales_id, file_name FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
         $filter
         ORDER BY sales_time DESC;";
+    debug_info($sql, "data_get_sales");
     $D = $wpdb->get_results($sql);
     return $D;
 }
@@ -420,9 +414,11 @@ function data_get_file_id_from_sales_id($sales_id) {
         WHERE $sales_table.id=%s;";
     $D = $wpdb->get_results($wpdb->prepare($sql , $sales_id), ARRAY_A);
 
-    if (count($D) == 0) {
+    if (count($D) == 0 || $D[0]['file_id'] == NULL) {
+	debug_info("result false for Sales_id $sales_id", "data_get_file_id_from_sales_id");
         return false;
     } else {
+	debug_info("found file with sales id $sales_id: File {$D[0]['file_id']}", "data_get_file_id_from_sales_id");
         return $D[0]['file_id'];
     }
 }

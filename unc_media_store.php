@@ -5,7 +5,7 @@ namespace ums;
 Plugin Name: Uncovery Media Store
 Plugin URI:  https://uncovery.net/about
 Description: Plugin to sell media files (obs recordings) from a nextcloud storage via Stripe
-Version:     3.0
+Version:     3.1
 Author:      Uncovery
 Author URI:  http://uncovery.net
 License:     GPL2

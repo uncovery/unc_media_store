@@ -22,7 +22,7 @@
 global $source, $target, $debug, $timezone, $video_date_format, $video_date_sample_string, $log, $logfile, $error;
 $root_folder = '/mnt/d/';
 $source = $root_folder . '/Recordings';
-$target = $root_folder . '/Nextcloud/recording';
+$target = $root_folder . '/Nexcloud/recording';
 $logs = __DIR__ . '/logs';
 $timezone = 'Asia/Hong_Kong';
 date_default_timezone_set($timezone);

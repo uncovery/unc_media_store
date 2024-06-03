@@ -48,7 +48,7 @@ function list_files(){
             $prices_url =  $stripe_url . "prices/$F->stripe_product_id";
             $prices_url_html = "<br><a target=\"_blank\" href=\"$prices_url\">Price</a>";
         }
-        
+
         $short_length = substr($F->length, 0, 5);
         $short_start = substr("$F->start_date $F->start_time", 0, 16);
         $short_end = substr($F->end_time, 0, 5);
@@ -107,7 +107,6 @@ function list_sales() {
             <th>ID</th>
             <th>Customer Name</th>
             <th>Customer email</th>
-            <th>Share link</th>
             <th>Expiry</th>
             <th>Price</th>
         </tr>\n";
@@ -117,17 +116,22 @@ function list_sales() {
 
         $mode_line = '';
         if (strlen($D->nextcloud_link) > 1) {
-            $link = "<a href=\"$D->nextcloud_link\">Nextcloud link</a>";
+            $link = "<a href=\"$D->nextcloud_link\">$D->file_name</a>";
         } else if (!data_get_file_id_from_sales_id($D->sales_id)) {
-            // file has expired
+            // no file available, was deleted.
+            // this is a legacy condition when we erased files from the DB when they expired.
             $link = "No link available";
-        } else {
+        } else if ($D->expiry == '0000-00-00 00:00:00') {
+            // file available and not yet expired
             $link ="<form style=\"margin:5px;\" method=\"POST\">
                     <div>
                         <input name=\"sales_id\" type=\"hidden\" value=\"$D->sales_id\">
                         <input name=\"create_link\" type=\"submit\" value=\"Create Link\">
                     </div>
                 </form>\n";
+        } else {
+            // file is in database but not on the server anymore since it expired
+            $link = "No link available";
         }
 
         if ($UMS['debug_mode'] == 'off') {
@@ -137,17 +141,16 @@ function list_sales() {
         if ($UMS['debug_mode'] == 'on') {
             $mode_line = "<td>$D->mode</td>";
         }
-        
+
         $price = $D->price / 100;
 
         $out .= "<tr>
             <td>$D->sales_time</td>
             $mode_line
-            <td>$D->file_name</td>
+            <td>$link</td>
             <td>$D->file_id</td>
             <td>$D->fullname</td>
             <td>$D->email</td>
-            <td>$link</td>
             <td>$D->expiry</td>
             <td>$price</td>
         </tr>\n";
@@ -179,7 +182,7 @@ function read_all_files() {
 
     // read already known files from the DB to compare
     $db_files = read_db();
-    
+
     // we check the time now and add the time to all found entries,
     // then delete the rest since those must have been removed from nextcloud
     $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
@@ -365,22 +368,34 @@ function new_file_notification($D, $id) {
 
 
 function calculate_media_price($video_length) {
-    global $UMS; 
-    
-    $base_price = $UMS['media_price'];
-    
-    $dt_video_length = new \DateTime($video_length);
-    $discount_time = \DateTime::createFromFormat('H:i:s', '00:00:00');
-    // Add the specified minutes
-    $discount_time->modify("+{$UMS['short_media_time']} minutes");
+    global $UMS;
 
-    if ($dt_video_length < $discount_time) {
-        return $base_price - $UMS['short_media_discount'];
-    } else  {
-        return $base_price;
-    }
+    $base_price = $UMS['media_base_price'];
+
+    list($hours, $minutes, $seconds) = explode(':', $video_length);
+
+    // Convert hours to minutes
+    $totalMinutes = $hours * 60 + $minutes;
+
+    // Add seconds (converted to minutes)
+    $totalMinutes += $seconds / 60;
+
+    // Calculate multiples
+    $multiples = floor($totalMinutes / $UMS['multiplicator_time']);
+
+    $final_price = $base_price + ( (1 + $multiples) * $UMS['multiplicator_price']);
+
+    return $final_price;
 }
 
+/**
+ * calculate the length of a video in Hours:minutes:seconds
+ *
+ * @param type $start_date
+ * @param type $start_time
+ * @param type $end_time
+ * @return type
+ */
 function calculate_video_length($start_date, $start_time, $end_time) {
     $date_check = times_same_day_check($start_time, $end_time);
     if (!$date_check) {
@@ -388,7 +403,7 @@ function calculate_video_length($start_date, $start_time, $end_time) {
     } else {
         $end_date = $start_date;
     }
-    
+
     $date1 = new \DateTime("$start_date $start_time");
     $date2 = new \DateTime("$end_date $end_time");
 
@@ -419,7 +434,7 @@ function times_same_day_check($start_time, $end_time) {
         return true;
     } elseif ($dt_start > $dt_end) {
         return false;
-    } 
+    }
 }
 
 function add_day_to_date($date) {

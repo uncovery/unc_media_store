@@ -149,6 +149,8 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
  */
 function recording_details($D) {
     global $UMS;
+    
+    debug_info(var_export($D, true), 'recording_details');
 
     $short_start_time = substr($D->start_time, 0, 5);
     $short_end_time = substr($D->end_time, 0, 5);
@@ -190,7 +192,7 @@ function recording_details($D) {
  * @return void
  */
 function execute_purchase() {
-    global $STRP, $UMS, $wp;
+    global $STRP, $wp;
     $purchase_file_id = filter_input(INPUT_POST, 'launch_sales_id', FILTER_SANITIZE_NUMBER_INT);
     // this is a honey-pot field to deter bots. IT's hidden via JS,
     // but if there is content, we know the user is fake.
@@ -282,7 +284,7 @@ function sales_create_price($P, $product_id) {
     }
 
     if ($create_price) {
-        $price_object = $STRP->create_price($product_id, $UMS['media_price'], $UMS['currency']);
+        $price_object = $STRP->create_price($product_id, $P->price, $UMS['currency']);
         $price_id = $price_object->id;
     } else {
         $price_id = $P->stripe_product_id;
