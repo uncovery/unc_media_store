@@ -70,6 +70,7 @@ function read_files() {
     foreach (new RecursiveIteratorIterator($di) as $file_path => $file) {
         // exclude invalid file extensions and directories
         if ($file->isDir() || $file->getExtension() <> 'mp4') {
+            debug_info("Invalid file, skipping: $file_path");
             continue;
         }
         debug_info( "------------- FOUND FILE: $file_path\n");
@@ -81,7 +82,6 @@ function read_files() {
         }
 
         // check the file date so that we delete old files
-
         $check = old_file_cleanup($file_path);
         if (!$check) {
             continue;
@@ -98,11 +98,18 @@ function read_files() {
             continue;
         }
 
+        $duration = get_video_length($file_path);
+        if (!$duration) {
+            continue;
+        }
+
         // check if we need to move the file
-        $target_path = target_path($file_path);
+        $target_path = target_path($file_path, $duration);
         if (!$target_path) {
             continue;
         }
+
+        create_gallery($target_path);
 
         if (file_exists($target_path)) {
             debug_info("Target file already exists, skipping");
@@ -115,9 +122,6 @@ function read_files() {
             error_info("ERROR COPYING FILE $file_path to $target_path!!");
             continue;
         }
-
-        create_gallery($target_path);
-        // create_audio($target_path);
     }
 }
 
@@ -170,14 +174,8 @@ function old_file_cleanup(string $file_path) {
  *
  * @return string|false The target path if successful, false otherwise.
  */
-function target_path(string $file_path) {
+function target_path(string $file_path, $duration) {
     global $video_date_sample_string, $target;
-
-    $duration = get_video_length($file_path);
-
-    if (!$duration) {
-        return false;
-    }
 
     $filename = basename($file_path);
     $start_date = substr($filename, 0, 10);
@@ -190,6 +188,7 @@ function target_path(string $file_path) {
     $target_folder = $target . "/" . date_folder($start_date);
 
     if (!file_exists($target_folder)) {
+        debug_info("Creating directory $target_folder");
         mkdir($target_folder, 0777, true);
     }
 
@@ -224,6 +223,7 @@ function calculate_date_age(string $file_date) {
  * @return bool|array returns an array with the video length in hours and minutes or false if an error occurs
  */
 function get_video_length(string $file_path)  {
+    debug_info("checking video length.. ");
     $command = 'ffmpeg -hide_banner -i "' . $file_path . '" 2>&1 | grep "Duration"';
     $return = shell_exec($command);
 
@@ -275,9 +275,11 @@ function get_video_volume(string $file_path) {
         error_info("ERROR checking volume of $file_path!");
         return false;
     }
-    debug_info("Video volume is ". floatval($matches[0][1]));
+    $volume = floatval($matches[0][1]);
 
-    return floatval($matches[0][1]);
+    debug_info("Video volume is $volume");
+
+    return $volume;
 }
 
 
@@ -352,6 +354,8 @@ function create_gallery(string $video_path) {
             trash_file($gallery_path);
             error_info("ERROR CREATING GALLERY: $gallery_path filesize is null");
         }
+    } else {
+        debug_info("Gallery exists already.");
     }
 }
 
@@ -423,9 +427,12 @@ function debug_info(string $text) {
  * @param string $text
  */
 function error_info(string $text) {
-    global $error;
+    global $error, $debug;
 
     $error .= "\n$text";
+    if ($debug) {
+        echo "ERROR: \n$text\n";
+    }
 }
 
 /**
