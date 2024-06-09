@@ -268,12 +268,18 @@ function process_single_file($F, $db_files, $time_stamp) {
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
         // remove old files from nextcloud
         $NC->delete_file($UMS['nextcloud_folder'] . $file_path);
+        $NC->delete_file($UMS['nextcloud_folder'] . $file_path . ".jpg");
         // echo "file $file_path is marked for deletion. Please cross-check if it's not shared anymore.\n";
         $result = 'deleted';
         if ($UMS['nextcloud_empty_trash'] == 'true') {
             $NC->empty_trash();
         }
     } else if (!isset($db_files[$file_path])) {
+        if (!file_exists($file_path . ".jpg")) {
+            debug_info("File has no thumbnail, aborting!!");
+            return false;
+        }
+        
         // add new files
         $description = "Recording from $start_date $start_time until $end_time";
         $length = calculate_video_length($start_date, $start_time, $end_time);
