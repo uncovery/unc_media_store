@@ -321,7 +321,9 @@ function show_sales_result($session_id) {
           "From: $website_name<$website_email>"
         );
         $headers = implode( PHP_EOL, $headers_array);
-        $file_path = data_get_file_from_session($session_id);
+        $F = data_get_fields_from_session($session_id);
+        $file_path = $F->file_path;
+        $price = $F->price;
 
         $expiry = calculate_share_expiry();
         $share_url = $NC->create_share($UMS['nextcloud_folder'] . $file_path, $expiry);
@@ -331,7 +333,7 @@ function show_sales_result($session_id) {
                 as possible and share the file with you. Thanks for your patience!";
         }
 
-        data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry);
+        data_finalize_sales_session($session_id, $user_name, $user_email, $share_url, $expiry, $price);
 
         $config_text= nl2br($UMS['success_text_email']);
 
@@ -354,8 +356,9 @@ function show_sales_result($session_id) {
         $message = "Hi,<br><br>
             A media file on your website was sold.<br>
             $test_warning
-            customer name: $user_name<br>
-            customer email: $user_email<br>
+            Customer name: $user_name<br>
+            Customer email: $user_email<br>
+            Price: $price<br>
             File Path: $file_path<br>
             File share Link: $html_url<br>
             File Share link will expire: $expiry<br>

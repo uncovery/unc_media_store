@@ -235,7 +235,7 @@ function data_prime_sales_session($file_id, $session_id, $product_id, $price_id)
  * @param string $expiry The expiry date of the sales session.
  * @return void
  */
-function data_finalize_sales_session($session_id, $username, $email, $nc_link, $expiry) {
+function data_finalize_sales_session($session_id, $username, $email, $nc_link, $expiry, $price) {
     global $wpdb;
 
     $wpdb->update(
@@ -245,11 +245,13 @@ function data_finalize_sales_session($session_id, $username, $email, $nc_link, $
             'email' => $email,
             'nextcloud_link' => $nc_link,
             'expiry' => $expiry,
+            'price' => $price,
         ),
         array(
             'stripe_session_id' => $session_id,
         ),
         array(
+            '%s',
             '%s',
             '%s',
             '%s',
@@ -305,7 +307,7 @@ function data_get_file_from_session($session_id) {
     $files_table = $wpdb->prefix . "ums_files";
     $sales_table =  $wpdb->prefix . "ums_sales";
     $D = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM $sales_table
+        "SELECT $files_table.price, full_path FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
         WHERE $sales_table.stripe_session_id='%s';",
         $session_id
@@ -316,7 +318,7 @@ function data_get_file_from_session($session_id) {
         return false;
     }
 
-    return $D[0]->full_path;
+    return $D[0];
 }
 
 /**
