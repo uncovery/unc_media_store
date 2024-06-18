@@ -149,7 +149,7 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
  */
 function recording_details($D) {
     global $UMS;
-    
+
     debug_info(var_export($D, true), 'recording_details');
 
     $short_start_time = substr($D->start_time, 0, 5);
@@ -320,7 +320,7 @@ function show_sales_result($session_id) {
         $headers_array = array(
           "From: $website_name<$website_email>"
         );
-        $headers = implode( PHP_EOL, $headers_array);
+        $headers = implode(PHP_EOL, $headers_array);
         $F = data_get_fields_from_session($session_id);
         $file_path = $F->file_path;
         $price = $F->price;
@@ -352,13 +352,15 @@ function show_sales_result($session_id) {
             $test_warning = "This was not a proper purchase but only done in test mode.<Br>";
         }
 
+       $display_price = $price / 100;
+
         // send email to admin
         $message = "Hi,<br><br>
             A media file on your website was sold.<br>
             $test_warning
             Customer name: $user_name<br>
             Customer email: $user_email<br>
-            Price: $price<br>
+            Price: $display_price<br>
             File Path: $file_path<br>
             File share Link: $html_url<br>
             File Share link will expire: $expiry<br>

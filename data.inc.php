@@ -301,7 +301,7 @@ function data_update_nc_share($sales_id, $nc_link, $expiry) {
  * @param string $session_id The session ID to retrieve the file path for.
  * @return string|false The file path if found, false otherwise.
  */
-function data_get_file_from_session($session_id) {
+function data_get_fields_from_session($session_id) {
     global $wpdb;
 
     $files_table = $wpdb->prefix . "ums_files";
