@@ -308,9 +308,13 @@ function show_sales_result($session_id) {
 
     $session_object = $STRP->get_session_data($session_id);
 
+    if ($session_object == NULL) {
+        return 'We could not detect any information from the payment provider. If you get an invoice on your credit card, please contact us immediately. Otherwise, please try again.';
+    }
+
     $user_email = $session_object->customer_details->email;
-    $user_name = $session_object->customer_details->name ;
-    $payment_status = $session_object->payment_status; // paid
+    $user_name = $session_object->customer_details->name;
+    $payment_status = $session_object->payment_status;
     $status = $session_object->status; // complete
 
     if ($payment_status == 'paid' && $status == 'complete') {
@@ -322,7 +326,7 @@ function show_sales_result($session_id) {
         );
         $headers = implode(PHP_EOL, $headers_array);
         $F = data_get_fields_from_session($session_id);
-        $file_path = $F->file_path;
+        $file_path = $F->full_path;
         $price = $F->price;
 
         $expiry = calculate_share_expiry();
@@ -360,7 +364,7 @@ function show_sales_result($session_id) {
             $test_warning
             Customer name: $user_name<br>
             Customer email: $user_email<br>
-            Price: $display_price<br>
+            Price: $display_price {$UMS['currency']}<br>
             File Path: $file_path<br>
             File share Link: $html_url<br>
             File Share link will expire: $expiry<br>
