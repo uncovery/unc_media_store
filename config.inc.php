@@ -113,13 +113,13 @@ $UMS['user_settings'] = array(
         'help' => 'The number of minutes that causes a video to become more expensive.',
         'default' => 60,
         'type' => 'text',
-        'title' => 'Multiplicator Time',
+        'title' => 'Time Multiplier',
     ),
     'multiplicator_price' => array(
         'help' => 'The added price when a video has a multiple of the above minutes. Needs to be in CENTS! 500 would be 5$',
         'default' => 200,
         'type' => 'text',
-        'title' => 'Multiplactor Price',
+        'title' => 'Price Multiplier',
     ),
 //    'audio_price' => array(
 //        'help' => 'The price for one Audio file to download. Needs to be in CENTS! 500 would be 5$',

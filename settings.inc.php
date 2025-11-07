@@ -154,6 +154,7 @@ function admin_settings() {
     echo "<li><a href='#tab1'><span>Settings</span></a></li>
         <li><a href='#tab2'><span>Files</span></a></li>
         <li><a href='#tab3'><span>Sales</span></a></li>
+        <!-- <li><a href='#tab5'><span>Stripe</span></a></li> -->
         $debug_tab
     </ul>\n";
 
@@ -195,6 +196,7 @@ function admin_settings() {
     if ($read_files) {
         echo "reading files...<br>";
         echo read_all_files();
+        echo make_sales_table();
     }
 
     echo "<hr>\n";
@@ -203,6 +205,9 @@ function admin_settings() {
     echo "</div>
         <div id='tab3'>\n";
     echo list_sales();
+//    echo "</div>
+//        <div id='tab5'>\n";
+//   echo stripe_reports();
     echo "</div>\n";
 
     # Set up tab titles

@@ -4,7 +4,6 @@ if (!defined('WPINC')) {
     die;
 }
 
-
 /**
  * Generates an HTML table listing files with their details.
  *
@@ -18,10 +17,9 @@ function list_files(){
 
     $out .= "<tr>
         <th>ID</th>
-        <th>Full Path</th>
+        <th>File name</th>
         <th>Thumbnail</th>
-        <th>Start</th>
-        <th>End</th>
+        <th>Date & Time</th>
         <th>Length</th>
         <th>Size</th>
         <th>Stripe</th>
@@ -48,7 +46,13 @@ function list_files(){
             $prices_url =  $stripe_url . "prices/$F->stripe_product_id";
             $prices_url_html = "<br><a target=\"_blank\" href=\"$prices_url\">Price</a>";
         }
-
+        
+        $download_link = '';
+        $nc_share = data_file_has_active_nextcloud_share($F->full_path);
+        if ($nc_share) {
+            $download_link = "<br><a target=\"_blank\" href=\"$nc_share\">Download</a>";
+        }
+        
         $short_length = substr($F->length, 0, 5);
         $short_start = substr("$F->start_date $F->start_time", 0, 16);
         $short_end = substr($F->end_time, 0, 5);
@@ -59,11 +63,10 @@ function list_files(){
             <td>$F->id</td>
             <td>$F->file_name</td>
             <td><a target=\"_blank\" href=\"$thumb_url\"><img width=\"100px\"src=\"$thumb_url\"></a></td>
-            <td>$short_start</td>
-            <td>$short_end</td>
+            <td>$short_start - $short_end</td>
             <td>$short_length</td>
             <td>$F->size</td>
-            <td>$produtcs_url_html $prices_url_html</td>
+            <td>$produtcs_url_html $prices_url_html $download_link</td>
             <td>$price {$UMS['currency']}</td>
             <td>$del_date days</td>
         </tr>\n";
@@ -120,7 +123,7 @@ function list_sales() {
         } else if (!data_get_file_id_from_sales_id($D->sales_id)) {
             // no file available, was deleted.
             // this is a legacy condition when we erased files from the DB when they expired.
-            $link = "No link available";
+            $link = "File unknown";
         } else if ($D->expiry == '0000-00-00 00:00:00') {
             // file available and not yet expired
             $link ="<form style=\"margin:5px;\" method=\"POST\">
@@ -131,7 +134,7 @@ function list_sales() {
                 </form>\n";
         } else {
             // file is in database but not on the server anymore since it expired
-            $link = "No link available";
+            $link = $D->file_name;
         }
 
         if ($UMS['debug_mode'] == 'off') {
@@ -275,11 +278,12 @@ function process_single_file($F, $db_files, $time_stamp) {
             $NC->empty_trash();
         }
     } else if (!isset($db_files[$file_path])) {
-        if (!file_exists($file_path . ".jpg")) {
-            debug_info("File has no thumbnail, aborting!!");
-            return false;
-        }
-        
+        // this check needs to happen on nextcloud, not local file system
+//        if (!file_exists($file_path . ".jpg")) {
+//            debug_info("File has no thumbnail, aborting!!", 'process_single_file');
+//            return false;
+//        }
+
         // add new files
         $description = "Recording from $start_date $start_time until $end_time";
         $length = calculate_video_length($start_date, $start_time, $end_time);
@@ -319,6 +323,81 @@ function process_single_file($F, $db_files, $time_stamp) {
     download_thumbnail($file_path);
     return $result;
 }
+
+/**
+ * show the stripe report
+ *
+ * @global type $STRP
+ * @return string
+ */
+function stripe_reports() {
+    global $STRP;
+
+    $currentTimestamp = time();
+    $firstSecondPastMonth = strtotime('first day of last month', $currentTimestamp);
+    $lastSecondPastMonth = strtotime('last day of last month', $currentTimestamp) + 86399; // Add 86399 seconds (23 hours, 59 minutes, 59 seconds)
+
+    $start = date('U', $firstSecondPastMonth);
+    $end = date('U', $lastSecondPastMonth);
+
+    $details = array(
+        'report_type' => 'balance_change_from_activity.itemized.3',
+        'parameters[interval_end]' => $end,
+        'parameters[interval_start]' => $start,
+    );
+
+    $report = $STRP->report_run($details);
+    $return = nl2br(var_export($report, true)) . "<hr>";
+
+    $url = $report->result->url;
+    $return .= "$url<br><hr>";
+
+    $detail = $STRP->report_features('exports.balance_history');
+    $return .= nl2br(var_export($detail, true)) . "<hr>";
+
+    $list = $STRP->report_types();
+    $return .= nl2br(var_export($list, true)) . "<hr>";
+
+    return $return;
+}
+
+/**
+ * This function writes a file to the disk that consolidates all 
+ * video sales based on the day they were recorded, sums up the value 
+ * created and videos sold. This is updated hourly and can be downloaded 
+ * through the URL
+ */
+function make_sales_table() {
+    $data = data_get_sales();
+    
+    $sales = array();
+    foreach ($data as $D) {
+        $date = substr($D->file_name, 0, 10);
+        $price = $D->price / 100;
+        
+        if (isset($sales[$date])) {
+            $sales[$date]['amount'] += $price;
+            $sales[$date]['volume'] += 1;
+        } else {
+            $sales[$date]['amount'] = $price;
+            $sales[$date]['volume'] = 1;
+        }
+    }
+    
+    $file = "date; price; amount;\n";
+    foreach ($sales as $date=>$S) {
+        $file .= "$date;{$S['amount']};{$S['volume']};\n";
+    }
+    
+    $target = __DIR__ . "/sales_data.csv";
+    
+    $result = file_put_contents($target, $file);
+    
+    $result = "Writing file to $target\n: " . var_export($result, true);
+    
+    return $result;
+}
+
 
 /**
  * Downloads the thumbnail for a given file path if it does not already exist.

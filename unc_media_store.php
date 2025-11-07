@@ -16,7 +16,10 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('WPINC')) {
     die();
 }
-global $UMS, $NC, $STRP;
+global $UMS, $NC, $STRP, $ns;
+
+$ns = 'ums';
+
 $UMS['debug'] = 'off';
 $UMS['debug_info'] = array();
 $UMS['start_time'] = microtime(true);
@@ -30,14 +33,14 @@ require_once( plugin_dir_path( __FILE__ ) . "libraries/stripe.php");
 require_once( plugin_dir_path( __FILE__ ) . "libraries/nextcloud.php");
 
 // actions on activating and deactivating the plugin
-register_activation_hook( __FILE__, 'ums\plugin_activate');
-register_deactivation_hook( __FILE__, 'ums\plugin_deactivate');
-register_uninstall_hook( __FILE__, 'ums\plugin_uninstall');
+register_activation_hook( __FILE__, $ns . '\plugin_activate');
+register_deactivation_hook( __FILE__, $ns . '\plugin_deactivate');
+register_uninstall_hook( __FILE__, $ns . '\plugin_uninstall');
 
 if (is_admin() === true){ // admin actions
-    add_action('admin_init', 'ums\admin_init');
+    add_action('admin_init', $ns . '\admin_init');
     // add an admin menu
-    add_action('admin_menu', 'ums\admin_menu');
+    add_action('admin_menu', $ns . '\admin_menu');
 }
 
 // get the settings from the system and set the global variables
@@ -89,7 +92,7 @@ function enqueue_jquery() {
     // You need styling for the datepicker. For simplicity I've linked to the jQuery UI CSS on a CDN.
     wp_register_style('jquery-ui', 'https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css');
 }
-add_action('wp_enqueue_scripts', 'ums\enqueue_jquery');
+add_action('wp_enqueue_scripts', $ns . '\enqueue_jquery');
 
 add_filter('widget_text', 'do_shortcode');
 
@@ -173,6 +176,8 @@ function hourly_run() {
     $time_stamp = date_format(date_Create("now", timezone_open(wp_timezone_string())), 'Y-m-d H:i:s');
     update_option($UMS['settings_prefix'] . "hourly_cron_lastrun", $time_stamp);
     read_all_files();
+    // make a CSV table listing all sales
+    make_sales_table();
 }
 add_action('ums_hourly_filescan', 'ums\hourly_run', 10, 2);
 

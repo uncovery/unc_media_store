@@ -173,6 +173,41 @@ class stripe {
         return $this->curl_command('checkout/sessions/' . $session_id);
     }
 
+    public function report_types() {
+        $all_reports = $this->curl_command('reporting/report_types');
+        $report_details = $all_reports->data;
+        $reports = array();
+        foreach ($report_details as $R) {
+            $reports[] = $R->id;
+        }
+        return $reports;
+    }
+
+    public function report_features($report_type) {
+        $all_reports = $this->curl_command('reporting/report_types');
+        $report_details = $all_reports->data;
+
+        foreach ($report_details as $R) {
+            if ($R->id == $report_type) {
+                $report_detail = var_export($R, true);
+            }
+        }
+        return $report_detail;
+    }
+
+    public function report_run($details) {
+        $results = '';
+        $run = $this->curl_command('reporting/report_runs', $details);
+
+        if (isset($run->id)) {
+            $id = $run->id;
+            $results = $this->curl_command('reporting/report_runs/' . $id);
+        } else {
+            $results = $run;
+        }
+        return $results;
+    }
+
     /**
      * execute a stripe cURL command and return the result
      *

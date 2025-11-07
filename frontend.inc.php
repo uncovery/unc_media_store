@@ -42,7 +42,8 @@ function show_interface() {
 
     // validate selected date
     if (is_null($selected_date) ||  !validate_date($selected_date, $format = 'Y-m-d') || !isset($all_dates[$selected_date])) {
-        $selected_date = array_key_last($all_dates);
+        // the data is sorted new to old, so the default value is the first (latest)
+        $selected_date = array_key_first($all_dates);
     }
 
     // create the datepicker JS
@@ -148,8 +149,6 @@ function recording_list(string $date, array $selected_date_data, $selected_file_
  * @return string The HTML output.
  */
 function recording_details($D) {
-    global $UMS;
-
     debug_info(var_export($D, true), 'recording_details');
 
     $short_start_time = substr($D->start_time, 0, 5);
@@ -168,10 +167,9 @@ function recording_details($D) {
             You will receive a download link via email after payment.
             The link will be active for 1 month.<br>
             <input id=\"special_field\" type=\"text\" name=\"special_field\" value=\"\">
-            <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">";
-    $out .= "        <input name=\"buynow_video\" type=\"submit\" value=\"Buy Video ($costs_video HKD)\">";
-    // $out .= "        <input name=\"buynow_audio\" type=\"submit\" value=\"Buy Audio only ($costs_audio HKD)\">";
-    $out .= "        <script>document.getElementById('special_field').style.display = 'none';</script>
+            <input name=\"launch_sales_id\" type=\"hidden\" value=\"$D->id\">
+            <input name=\"buynow_video\" type=\"submit\" value=\"Buy Video ($costs_video HKD)\">
+            <script>document.getElementById('special_field').style.display = 'none';</script>
         </form>
     ";
 

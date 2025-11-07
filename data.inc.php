@@ -117,7 +117,7 @@ function read_db() {
     global $wpdb;
     $file_array = array();
     $table = $wpdb->prefix . "ums_files";
-    $sql = "SELECT * FROM $table ORDER BY start_date";
+    $sql = "SELECT * FROM $table ORDER BY start_date DESC";
     $file_data = $wpdb->get_results($sql);
     foreach ($file_data as $D) {
         $file_array[$D->full_path] = $D;
@@ -186,7 +186,8 @@ function data_fetch_one_recording(int $id) {
 }
 
 /**
- * Inserts a new sales record into the database and updates the stripe product and price IDs for a given file.
+ * Inserts a new sales record into the database and updates the stripe product 
+ * and price IDs for a given file.
  *
  * @param int $file_id The ID of the file being sold.
  * @param string $session_id The ID of the Stripe session associated with the sale.
@@ -337,12 +338,12 @@ function data_get_sales() {
 
     $filter = '';
     if ($UMS['stripe_mode'] == 'live') {
-        $filter = "WHERE mode LIKE 'live'";
+        $filter = "AND mode LIKE 'live'";
     }
 
     $sql = "SELECT $sales_table.*, $sales_table.id as sales_id, file_name FROM $sales_table
         LEFT JOIN $files_table ON $sales_table.file_id=$files_table.id
-        $filter
+        WHERE email <> '' $filter
         ORDER BY sales_time DESC;";
     debug_info($sql, "data_get_sales");
     $D = $wpdb->get_results($sql);
@@ -374,7 +375,7 @@ function data_file_has_active_nextcloud_share($file_path) {
         WHERE $files_table.full_path = '%s';";
     $D = $wpdb->get_results($wpdb->prepare($sql , $file_path), ARRAY_A);
     if (isset($D[0]['nextcloud_link']) && $D[0]['nextcloud_link'] <> '') {
-        return true;
+        return $D[0]['nextcloud_link'];
     }
     return false;
 }
