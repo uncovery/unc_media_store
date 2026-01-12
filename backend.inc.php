@@ -12,6 +12,8 @@ if (!defined('WPINC')) {
 function list_files(){
     global $STRP, $UMS;
     $files = read_db();
+    
+    debug_info("Read all files from db, counted " . count($files), 'list_files');
 
     $out = "<table class='ums_admin_table'>";
 
@@ -27,11 +29,13 @@ function list_files(){
         <th>Retention</th>
     </tr>\n";
 
-    foreach ($files as $F) {
+    foreach ($files as $file_path => $F) {
         // we skip expired files.
         if ($F->expired <> '0000-00-00 00:00:00') {
             continue;
         }
+        debug_info("Checking file $file_path", 'list_files');
+        
         $thumb_url =  $F->thumbnail_url;
         $stripe_url = $STRP->stripe_url();
         $produtcs_url_html = '';
@@ -74,6 +78,8 @@ function list_files(){
 
     $out .= "</table>\n";
 
+    debug_info("Table finished", 'list_files');
+    
     return $out;
 }
 
@@ -179,12 +185,16 @@ function read_all_files() {
     $nc_files = $NC->read_folder('recording', $UMS['nextcloud_folder_depth']);
 
     $nc_files_filtered = $NC->filter_files($nc_files, $UMS['nextcloud_content_types']);
+    
+    debug_info("files present on nextcould:" . count($nc_files_filtered), 'read_all_files');
 
     // cleanup expired share links
     data_cleanup_expired_links();
 
     // read already known files from the DB to compare
     $db_files = read_db();
+    
+    debug_info("files present in DB:" . count($db_files), 'read_all_files');
 
     // we check the time now and add the time to all found entries,
     // then delete the rest since those must have been removed from nextcloud
@@ -211,6 +221,8 @@ function read_all_files() {
     Files deleted from nextcloud due to age: $old_file<br>
     ";
 
+    debug_info("Read all files resut: $result", 'read_all_files');
+    
     return $result;
 }
 
@@ -245,7 +257,7 @@ function process_single_file($F, $db_files, $time_stamp) {
     $strip_length = strlen($full_url);
     $file_path = substr($F->href->__toString(), $strip_length);
 
-    debug_info("file found: $file_path", 'process_single_file');
+    debug_info("Nextcloud file found: $file_path", 'process_single_file');
 
     // get more variables from XML
     $filename = basename($file_path);
@@ -269,6 +281,7 @@ function process_single_file($F, $db_files, $time_stamp) {
     $start_time = str_replace("-", ":", substr($filename, 11, 5)) . ":00";
 
     if (file_storage_is_expired($start_date) && !data_file_has_active_nextcloud_share($file_path)) {
+        debug_info("Nextcloud file is old and is not shared, removing it", 'process_single_file');
         // remove old files from nextcloud
         $NC->delete_file($UMS['nextcloud_folder'] . $file_path);
         $NC->delete_file($UMS['nextcloud_folder'] . $file_path . ".jpg");
@@ -278,6 +291,7 @@ function process_single_file($F, $db_files, $time_stamp) {
             $NC->empty_trash();
         }
     } else if (!isset($db_files[$file_path])) {
+        debug_info("Nextcloud file is not in DB, adding it", 'process_single_file');
         // this check needs to happen on nextcloud, not local file system
 //        if (!file_exists($file_path . ".jpg")) {
 //            debug_info("File has no thumbnail, aborting!!", 'process_single_file');
@@ -310,6 +324,7 @@ function process_single_file($F, $db_files, $time_stamp) {
         new_file_notification($db_data, $wpdb->insert_id);
         $result = "new";
     } else {
+        debug_info("Nextcloud file is in DB, updating verified timestamp", 'process_single_file');
         // we still need to update the timestamp to mark the DB Entry as existing
         $wpdb->update(
             $wpdb->prefix . "ums_files",
@@ -372,7 +387,13 @@ function make_sales_table() {
     
     $sales = array();
     foreach ($data as $D) {
-        $date = substr($D->file_name, 0, 10);
+        if (!isset($D->file_name)) {
+            $file_name = 'unknown filename';
+        } else {
+            $file_name = $D->file_name;
+        }
+        
+        $date = substr($file_name, 0, 10);
         $price = $D->price / 100;
         
         if (isset($sales[$date])) {

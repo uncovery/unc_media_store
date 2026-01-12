@@ -26,8 +26,11 @@ function show_interface() {
         return show_sales_result($session_id);
     }
 
-    // get the data from the DB
+    // get the data from the DB, all files available, no filter
     $files_data = read_db();
+    
+    // let's get only the individual dates from the DB
+    // excluding expired files
     $all_dates = data_fetch_dates($files_data);
 
     if (count($all_dates) == 0) {

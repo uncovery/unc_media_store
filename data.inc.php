@@ -126,7 +126,7 @@ function read_db() {
 }
 
 /**
- * Fetches the unique start dates from the given database.
+ * Fetches the unique start dates from the given database, excluding expired files
  *
  * @param array $ums_db The database containing the records.
  * @return array An array of unique start dates.
@@ -135,6 +135,9 @@ function data_fetch_dates($ums_db) {
     $dates = array();
 
     foreach ($ums_db as $D) {
+        if ($D->expired <> '0000-00-00 00:00:00') {
+            continue;
+        }        
         $dates[$D->start_date] = $D->start_date;
     }
 
@@ -357,6 +360,7 @@ function data_get_sales() {
 function data_cleanup_expired_links() {
     global $wpdb;
 
+    debug_info("cleaning up expired share links from db", 'read_all_files');
     // Prepare the SQL statement
     $table_name_sales = $wpdb->prefix . "ums_sales";
     $sql = $wpdb->prepare("UPDATE $table_name_sales SET nextcloud_link = '' WHERE expiry < %s", date('Y-m-d'));
