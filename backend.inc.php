@@ -214,7 +214,11 @@ function read_all_files() {
     }
 
     // We now remove all files that do not have the new timestamp.
-    $missing = data_clean_db($time_stamp);
+    // only if we have some files, otherwise, in case of a broken connection,
+    // all files will be marked as expired.
+    if (count($nc_files ) > 0) {
+        $missing = data_clean_db($time_stamp);
+    }
 
     $result = "\nFiles new on nextcloud, added to DB: $new_file<br>
     Files missing on nextcloud, removed from DB: $missing<br>
